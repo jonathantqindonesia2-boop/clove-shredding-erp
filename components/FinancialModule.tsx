@@ -15,13 +15,14 @@ import {
   RefreshCw,
   Scale,
   ShieldCheck,
+  Sliders,
   Sparkles,
   TrendingUp,
   Users,
   Zap,
 } from 'lucide-react';
 import { BatchQC, InventoryItem, Machine, Order, Shipment } from '../lib/types';
-import { HRISPayrollAllocation, JournalEntry } from '../lib/financial-types';
+import { HRISPayrollAllocation, JournalEntry, PricingConfig, PurchaseOrder } from '../lib/financial-types';
 import { generateFinancialStatements } from '../lib/financial-engine';
 import { HRIS_WORKERS } from '../lib/hris-integration';
 
@@ -31,7 +32,10 @@ interface FinancialModuleProps {
   inventory: InventoryItem[];
   shipments: Shipment[];
   hrisPayroll: HRISPayrollAllocation;
+  pricing: PricingConfig;
+  purchaseOrders: PurchaseOrder[];
   onSyncHRIS: () => void;
+  onOpenPricingModal: () => void;
 }
 
 export default function FinancialModule({
@@ -40,15 +44,18 @@ export default function FinancialModule({
   inventory,
   shipments,
   hrisPayroll,
+  pricing,
+  purchaseOrders,
   onSyncHRIS,
+  onOpenPricingModal,
 }: FinancialModuleProps) {
   const [activeSubTab, setActiveSubTab] = useState<'pnl' | 'balance' | 'costing' | 'hris' | 'journal'>('pnl');
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
-  // Compute live statements
+  // Compute live statements using dynamic pricing & purchase orders
   const { pnl, balanceSheet, journalEntries, unitCostPerKg, averageSellingPricePerKg } =
-    generateFinancialStatements(orders, batches, inventory, shipments, hrisPayroll);
+    generateFinancialStatements(orders, batches, inventory, shipments, hrisPayroll, pricing, purchaseOrders);
 
   const formatIDR = (num: number) => {
     return 'Rp ' + Math.round(num).toLocaleString('id-ID');
@@ -97,7 +104,7 @@ export default function FinancialModule({
 
   return (
     <div className="space-y-6">
-      {/* Top Banner with HRIS Sync Integration Status */}
+      {/* Top Banner with HRIS Sync Integration Status & Dynamic Price Configuration */}
       <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white rounded-2xl p-6 shadow-md border border-emerald-900/40">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
@@ -109,10 +116,10 @@ export default function FinancialModule({
                 <h2 className="text-lg font-bold">
                   Sistem Laporan Keuangan &amp; Akuntansi Manufaktur Terpadu
                 </h2>
-                <div className="flex items-center gap-2 mt-0.5">
+                <div className="flex flex-wrap items-center gap-2 mt-0.5">
                   <span className="inline-flex items-center gap-1 text-xs text-emerald-400 bg-emerald-900/50 px-2.5 py-0.5 rounded-full border border-emerald-700/60 font-medium">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    Integrated with HRIS Core &amp; Plant Ops
+                    Integrated with HRIS Core &amp; Dynamic Pricing
                   </span>
                   <span className="text-xs text-slate-400">Periode: {pnl.period}</span>
                 </div>
@@ -121,6 +128,14 @@ export default function FinancialModule({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              onClick={onOpenPricingModal}
+              className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-xs active:scale-95"
+            >
+              <Sliders className="h-4 w-4" />
+              <span>Update Harga Beli &amp; Jual</span>
+            </button>
+
             <button
               onClick={handleTriggerSync}
               disabled={isSyncing}
@@ -291,9 +306,14 @@ export default function FinancialModule({
                 Standar Akuntansi Keuangan (SAK) Pabrik Perajangan Cengkeh &middot; {pnl.period}
               </p>
             </div>
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-              Audit Internal Ready
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onOpenPricingModal}
+                className="text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 transition"
+              >
+                Ubah Harga Satuan &rarr;
+              </button>
+            </div>
           </div>
 
           <div className="space-y-4 text-xs">
@@ -308,11 +328,11 @@ export default function FinancialModule({
                   <span className="font-semibold text-slate-900">{formatIDR(pnl.revenue.cloveCleanSales)}</span>
                 </div>
                 <div className="flex justify-between py-1 text-slate-600">
-                  <span>Penjualan Byproduct: Debu Cengkeh Siklon Murni (Industri Dupa)</span>
+                  <span>Penjualan Byproduct: Debu Cengkeh Siklon Murni (@{formatIDR(pricing.byproductDustPrice)}/kg)</span>
                   <span className="font-medium">{formatIDR(pnl.revenue.dustByproductSales)}</span>
                 </div>
                 <div className="flex justify-between py-1 text-slate-600">
-                  <span>Penjualan Byproduct: Gagang Cengkeh Sortir (Distilasi Minyak Eugenol)</span>
+                  <span>Penjualan Byproduct: Gagang Cengkeh Sortir (@{formatIDR(pricing.byproductStemPrice)}/kg)</span>
                   <span className="font-medium">{formatIDR(pnl.revenue.stemByproductSales)}</span>
                 </div>
                 <div className="flex justify-between py-2 border-t border-slate-200 font-bold text-slate-900 text-sm">
@@ -329,7 +349,7 @@ export default function FinancialModule({
               </h4>
               <div className="space-y-2 pl-3 border-l-2 border-slate-400">
                 <div className="flex justify-between py-1 text-slate-700">
-                  <span>Biaya Pemakaian Bahan Baku Bunga Cengkeh Kering (Direct Materials)</span>
+                  <span>Biaya Bahan Baku Bunga Cengkeh Kering (@{formatIDR(pricing.rawClovePriceZanzibar)}/kg)</span>
                   <span className="font-semibold text-slate-900">{formatIDR(pnl.cogs.directMaterialsCost)}</span>
                 </div>
                 <div className="flex justify-between py-1 text-slate-700">
@@ -343,15 +363,15 @@ export default function FinancialModule({
                 </div>
                 <div className="pl-4 py-1 space-y-1.5 text-slate-500 border-l border-slate-200 text-[11px]">
                   <div className="flex justify-between">
-                    <span>- Biaya Listrik 3-Phase &amp; Daya Mesin Perajang</span>
+                    <span>- Biaya Listrik 3-Phase Mesin (@{formatIDR(pricing.electricityPerKg)}/kg)</span>
                     <span>{formatIDR(pnl.cogs.factoryOverhead.powerElectricity)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>- Konsumsi Pengasahan &amp; Penggantian Mata Pisau</span>
+                    <span>- Konsumsi Pengasahan &amp; Pisau (@{formatIDR(pricing.bladeWearPerKg)}/kg)</span>
                     <span>{formatIDR(pnl.cogs.factoryOverhead.bladeMaintenance)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>- Pengemasan Sak Goni &amp; Plastik Kedap Udara 50kg</span>
+                    <span>- Kemasan Sak Goni 50kg (@{formatIDR(pricing.packagingPricePerBag)}/sak)</span>
                     <span>{formatIDR(pnl.cogs.factoryOverhead.packagingSupplies)}</span>
                   </div>
                   <div className="flex justify-between">
@@ -633,9 +653,12 @@ export default function FinancialModule({
                 Rincian biaya per kilogram hasil rajang prima dan simulasi margin keuntungan
               </p>
             </div>
-            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-              Unit Margin: +{formatIDR(averageSellingPricePerKg - unitCostPerKg)} / kg
-            </span>
+            <button
+              onClick={onOpenPricingModal}
+              className="text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 transition"
+            >
+              Ubah Parameter Harga Satuan &rarr;
+            </button>
           </div>
 
           {/* Unit Cost Comparison Bars */}
@@ -646,7 +669,7 @@ export default function FinancialModule({
                 {formatIDR(averageSellingPricePerKg)} <span className="text-xs font-normal text-slate-500">/ kg</span>
               </span>
               <p className="text-[11px] text-slate-500 mt-2">
-                Berdasarkan kombinasi ukuran 0.4mm, 0.6mm &amp; 0.8mm ke pabrik rokok
+                Berdasarkan harga rajang terkonfigurasi ke pabrik rokok
               </p>
             </div>
 
@@ -656,7 +679,7 @@ export default function FinancialModule({
                 {formatIDR(unitCostPerKg)} <span className="text-xs font-normal text-slate-500">/ kg</span>
               </span>
               <p className="text-[11px] text-slate-500 mt-2">
-                Mencakup bahan mentah, upah operator HRIS, listrik mesin &amp; pisau
+                Bahan mentah (@{formatIDR(pricing.rawClovePriceZanzibar)}), upah operator HRIS &amp; daya
               </p>
             </div>
 
@@ -681,7 +704,7 @@ export default function FinancialModule({
             <div className="space-y-2 text-xs">
               <div>
                 <div className="flex justify-between text-slate-700 mb-1">
-                  <span>1. Bahan Baku Bunga Cengkeh Kering (Asumsi Rendemen 89%)</span>
+                  <span>1. Bahan Baku Bunga Cengkeh Kering (@{formatIDR(pricing.rawClovePriceZanzibar)}/kg)</span>
                   <span className="font-bold text-slate-900">
                     {formatIDR(unitCostPerKg * 0.77)} (77.0%)
                   </span>
@@ -708,7 +731,7 @@ export default function FinancialModule({
 
               <div>
                 <div className="flex justify-between text-slate-700 mb-1">
-                  <span>3. Konsumsi Listrik Mesin Rotary/Guillotine &amp; Asah Pisau</span>
+                  <span>3. Konsumsi Listrik Mesin (@{formatIDR(pricing.electricityPerKg)}) &amp; Asah Pisau (@{formatIDR(pricing.bladeWearPerKg)})</span>
                   <span className="font-bold text-slate-900">
                     {formatIDR(unitCostPerKg * 0.06)} (6.0%)
                   </span>
@@ -893,7 +916,7 @@ export default function FinancialModule({
                 Jurnal Umum Akuntansi Otomatis (Double-Entry General Ledger)
               </h3>
               <p className="text-xs text-slate-500">
-                Transaksi terposting secara otomatis dari aktivitas produksi batch, logistik DO, dan payroll HRIS
+                Transaksi terposting secara otomatis dari aktivitas produksi batch, logistik DO, pengadaan PO, dan payroll HRIS
               </p>
             </div>
             <span className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
@@ -911,6 +934,7 @@ export default function FinancialModule({
                 HRIS_PAYROLL: 'bg-purple-50 text-purple-700 border-purple-200',
                 LOGISTIK_PENGIRIMAN: 'bg-blue-50 text-blue-700 border-blue-200',
                 GUDANG_INVENTORI: 'bg-amber-50 text-amber-700 border-amber-200',
+                PENGADAAN_PEMBELIAN: 'bg-teal-50 text-teal-700 border-teal-200',
               }[jrn.sourceModule];
 
               return (

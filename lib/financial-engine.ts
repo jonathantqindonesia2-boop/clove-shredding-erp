@@ -4,8 +4,11 @@ import {
   ChartOfAccount,
   HRISPayrollAllocation,
   JournalEntry,
+  PricingConfig,
   ProfitAndLossStatement,
+  PurchaseOrder,
 } from './financial-types';
+import { DEFAULT_PRICING_CONFIG } from './initial-data';
 
 export const FACTORY_COA: ChartOfAccount[] = [
   { code: '1001', name: 'Kas & Rekening Operasional Bank', category: 'ASSET', normalBalance: 'DEBIT' },
@@ -40,7 +43,9 @@ export function generateFinancialStatements(
   batches: BatchQC[],
   inventory: InventoryItem[],
   shipments: Shipment[],
-  hrisPayroll: HRISPayrollAllocation
+  hrisPayroll: HRISPayrollAllocation,
+  pricing: PricingConfig = DEFAULT_PRICING_CONFIG,
+  purchaseOrders: PurchaseOrder[] = []
 ): {
   pnl: ProfitAndLossStatement;
   balanceSheet: BalanceSheetStatement;
@@ -48,47 +53,46 @@ export function generateFinancialStatements(
   unitCostPerKg: number;
   averageSellingPricePerKg: number;
 } {
-  // 1. REVENUE CALCULATION
+  // 1. REVENUE CALCULATION MENGGUNAKAN HARGA JUAL DINAMIS
   const pricePerCutSize: Record<string, number> = {
-    '0.4mm': 155000,
-    '0.6mm': 145000,
-    '0.8mm': 138000,
-    '1.0mm': 132000,
-    '1.2mm': 128000,
+    '0.4mm': pricing.sellingPrice04mm,
+    '0.6mm': pricing.sellingPrice06mm,
+    '0.8mm': pricing.sellingPrice08mm,
+    '1.0mm': pricing.sellingPrice10mm,
+    '1.2mm': pricing.sellingPrice12mm,
   };
 
-  // Hitung penjualan dari order yang telah diproses/terkirim
   let cloveCleanSales = 0;
   let totalProcessedKg = 0;
 
   orders.forEach((o) => {
-    const rate = pricePerCutSize[o.cutSize] || 140000;
+    const rate = pricePerCutSize[o.cutSize] || pricing.sellingPrice06mm;
     const billedKg = Math.max(o.processedKg, o.status === 'Selesai' ? o.quantityKg : 0);
     cloveCleanSales += billedKg * rate;
     totalProcessedKg += billedKg;
   });
 
-  // Penjualan Byproduct
+  // Penjualan Byproduct menggunakan harga jual byproduct dinamis
   const totalDustKg = batches.reduce((sum, b) => sum + b.dustKg, 0);
   const totalStemKg = batches.reduce((sum, b) => sum + b.stemKg, 0);
-  const dustByproductSales = totalDustKg * 24000; // Rp 24.000 / kg
-  const stemByproductSales = totalStemKg * 18000; // Rp 18.000 / kg
+  const dustByproductSales = totalDustKg * pricing.byproductDustPrice;
+  const stemByproductSales = totalStemKg * pricing.byproductStemPrice;
 
   const totalRevenue = cloveCleanSales + dustByproductSales + stemByproductSales;
 
-  // 2. COGS (HPP) CALCULATION
+  // 2. COGS (HPP) CALCULATION MENGGUNAKAN HARGA BELI & OVERHEAD DINAMIS
   const totalRawInputKg = batches.reduce((sum, b) => sum + b.rawInputKg, 0);
-  const rawMaterialPricePerKg = 104000; // Harga beli cengkeh utuh kering
+  const rawMaterialPricePerKg = pricing.rawClovePriceZanzibar;
   const directMaterialsCost = totalRawInputKg * rawMaterialPricePerKg;
 
   // Direct Labor dari Integrasi HRIS
   const directLaborCost = hrisPayroll.directLaborTotal + hrisPayroll.overtimeDirectLabor;
 
-  // Factory Overhead (BOP)
-  const powerElectricity = Math.round(totalRawInputKg * 850); // Listrik 3-phase perajangan
-  const bladeMaintenance = Math.round(totalRawInputKg * 620); // Konsumsi pisau perajang
-  const packagingSupplies = Math.round((totalProcessedKg / 50) * 8500); // Karung goni per 50kg
-  const depreciationMachines = 12500000; // Depresiasi mesin bulanan
+  // Factory Overhead (BOP) dinamis
+  const powerElectricity = Math.round(totalRawInputKg * pricing.electricityPerKg);
+  const bladeMaintenance = Math.round(totalRawInputKg * pricing.bladeWearPerKg);
+  const packagingSupplies = Math.round((totalProcessedKg / 50) * pricing.packagingPricePerBag);
+  const depreciationMachines = 12500000;
   const totalOverhead = powerElectricity + bladeMaintenance + packagingSupplies + depreciationMachines;
 
   const totalCOGS = directMaterialsCost + directLaborCost + totalOverhead;
@@ -96,18 +100,18 @@ export function generateFinancialStatements(
   const grossMarginPercent = totalRevenue > 0 ? Number(((grossProfit / totalRevenue) * 100).toFixed(2)) : 0;
 
   // 3. OPERATING EXPENSES (OPEX)
-  const deliveryAndLogistics = shipments.length * 3750000; // BBM, supir, tol ekspedisi
+  const deliveryAndLogistics = shipments.length * 3750000;
   const administrativeSalaries = hrisPayroll.administrativeTotal + hrisPayroll.indirectLaborTotal;
   const officeAndGeneralSupplies = 8200000;
   const totalOpex = deliveryAndLogistics + administrativeSalaries + officeAndGeneralSupplies;
 
   const operatingIncome = grossProfit - totalOpex;
-  const taxExpense = operatingIncome > 0 ? Math.round(operatingIncome * 0.22) : 0; // PPh Badan 22%
+  const taxExpense = operatingIncome > 0 ? Math.round(operatingIncome * 0.22) : 0;
   const netIncome = operatingIncome - taxExpense;
   const netMarginPercent = totalRevenue > 0 ? Number(((netIncome / totalRevenue) * 100).toFixed(2)) : 0;
 
   const pnl: ProfitAndLossStatement = {
-    period: 'November 2026 (MTD)',
+    period: 'November 2026 (Live Dynamic)',
     revenue: {
       cloveCleanSales,
       dustByproductSales,
@@ -149,22 +153,27 @@ export function generateFinancialStatements(
   const dustStock = inventory.find((i) => i.category === 'BYPRODUCT_DUST')?.currentStockKg || 2500;
 
   const rawMaterialInventory = rawStock * rawMaterialPricePerKg;
-  const finishedGoodsInventory = fgStock * 118000; // Dinilai berdasarkan biaya HPP
-  const byproductInventory = dustStock * 24000;
+  const finishedGoodsInventory = fgStock * (totalProcessedKg > 0 ? Math.round(totalCOGS / totalProcessedKg) : 118000);
+  const byproductInventory = dustStock * pricing.byproductDustPrice;
 
   const cashAndBank = 1250000000 + netIncome * 0.45;
-  const accountsReceivable = totalRevenue * 0.35; // 35% penjualan tempo 30 hari
+  const accountsReceivable = totalRevenue * 0.35;
   const totalCurrentAssets =
     cashAndBank + accountsReceivable + rawMaterialInventory + finishedGoodsInventory + byproductInventory;
 
-  const shreddingMachinery = 650000000; // Nilai perolehan 4 mesin rajang & siklon
-  const transportVehicles = 420000000; // Truk box ekspedisi
+  const shreddingMachinery = 650000000;
+  const transportVehicles = 420000000;
   const accumulatedDepreciation = 145000000;
   const netFixedAssets = shreddingMachinery + transportVehicles - accumulatedDepreciation;
   const totalAssets = totalCurrentAssets + netFixedAssets;
 
-  const accountsPayableSuppliers = directMaterialsCost * 0.4; // Hutang ke petani cengkeh tempo
-  const accruedPayrollHRIS = hrisPayroll.totalPayrollExpense * 0.5; // Akrual gaji berjalan
+  // Accounts Payable: Pembelian bahan baku tempo dari purchase orders yang berstatus aktif
+  const pendingPOAmount = purchaseOrders
+    .filter((po) => po.status === 'Dalam Pengiriman' || po.status === 'Diterima Penuh (Selesai)')
+    .reduce((sum, po) => sum + po.totalAmount * 0.5, 0);
+
+  const accountsPayableSuppliers = Math.max(directMaterialsCost * 0.4, pendingPOAmount);
+  const accruedPayrollHRIS = hrisPayroll.totalPayrollExpense * 0.5;
   const taxPayable = taxExpense;
   const totalCurrentLiabilities = accountsPayableSuppliers + accruedPayrollHRIS + taxPayable;
   const totalLiabilities = totalCurrentLiabilities;
@@ -216,7 +225,7 @@ export function generateFinancialStatements(
       id: 'JRN-2026-11-001',
       date: '2026-11-18 08:30',
       referenceNumber: 'BATCH-PROD-MS01',
-      description: 'Pengakuan Biaya Pemakaian Bahan Baku Cengkeh Kering Batch 1 & 2',
+      description: `Pengakuan Biaya Pemakaian Bahan Baku Cengkeh Kering (@${rawMaterialPricePerKg.toLocaleString('id-ID')}/kg)`,
       sourceModule: 'OPERASIONAL_PERAJANGAN',
       items: [
         { accountCode: '5101', accountName: 'Beban Pokok: Pemakaian Bahan Baku Cengkeh', debit: directMaterialsCost, credit: 0 },
@@ -239,7 +248,7 @@ export function generateFinancialStatements(
       id: 'JRN-2026-11-003',
       date: '2026-11-18 11:30',
       referenceNumber: 'DO-2026-11-094',
-      description: 'Pengiriman Cengkeh Rajang Super ke PT Gudang Garam Tbk & Penerbitan Tagihan Piutang',
+      description: `Pengiriman Cengkeh Rajang Super ke PT Gudang Garam Tbk (@${pricing.sellingPrice06mm.toLocaleString('id-ID')}/kg)`,
       sourceModule: 'LOGISTIK_PENGIRIMAN',
       items: [
         { accountCode: '1100', accountName: 'Piutang Usaha Klien Rokok Kretek', debit: cloveCleanSales * 0.6, credit: 0 },
@@ -250,7 +259,7 @@ export function generateFinancialStatements(
       id: 'JRN-2026-11-004',
       date: '2026-11-18 12:45',
       referenceNumber: 'BYP-SALE-088',
-      description: 'Penerimaan Kas dari Penjualan Debu Siklon ke Industri Dupa Aromaterapi',
+      description: `Penerimaan Kas Penjualan Debu Siklon ke Industri Dupa (@${pricing.byproductDustPrice.toLocaleString('id-ID')}/kg)`,
       sourceModule: 'GUDANG_INVENTORI',
       items: [
         { accountCode: '1001', accountName: 'Kas & Rekening Operasional Bank', debit: dustByproductSales, credit: 0 },
@@ -258,6 +267,23 @@ export function generateFinancialStatements(
       ],
     },
   ];
+
+  // Tambahkan jurnal otomatis dari Purchase Orders jika ada yang berstatus diterima
+  purchaseOrders
+    .filter((po) => po.status === 'Diterima Penuh (Selesai)')
+    .forEach((po, idx) => {
+      journalEntries.push({
+        id: `JRN-PUR-${idx + 1}`,
+        date: po.estimatedArrival + ' 09:00',
+        referenceNumber: po.poNumber,
+        description: `Penerimaan Bahan Baku Bunga Cengkeh dari ${po.supplierName} (${po.receivedKg.toLocaleString('id-ID')} kg @ Rp ${po.unitPrice.toLocaleString('id-ID')})`,
+        sourceModule: 'PENGADAAN_PEMBELIAN',
+        items: [
+          { accountCode: '1201', accountName: 'Persediaan Bahan Baku Bunga Cengkeh', debit: po.totalAmount, credit: 0 },
+          { accountCode: '2101', accountName: 'Hutang Usaha Petani & Pengepul Cengkeh', debit: 0, credit: po.totalAmount },
+        ],
+      });
+    });
 
   const unitCostPerKg = totalProcessedKg > 0 ? Math.round(totalCOGS / totalProcessedKg) : 118000;
   const averageSellingPricePerKg = totalProcessedKg > 0 ? Math.round(cloveCleanSales / totalProcessedKg) : 142000;

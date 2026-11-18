@@ -10,17 +10,19 @@ import {
   Truck,
   TrendingUp,
   DollarSign,
+  ShoppingCart,
 } from 'lucide-react';
 
 export type TabKey =
   | 'dashboard'
+  | 'procurement'
+  | 'finance'
   | 'orders'
   | 'production'
   | 'machines'
   | 'inventory'
   | 'shipments'
-  | 'analytics'
-  | 'finance';
+  | 'analytics';
 
 interface TabNavigationProps {
   activeTab: TabKey;
@@ -29,6 +31,7 @@ interface TabNavigationProps {
   delayCount: number;
   batchCount: number;
   machineCount: number;
+  poCount: number;
 }
 
 export default function TabNavigation({
@@ -38,6 +41,7 @@ export default function TabNavigation({
   delayCount,
   batchCount,
   machineCount,
+  poCount,
 }: TabNavigationProps) {
   const tabs = [
     {
@@ -46,6 +50,13 @@ export default function TabNavigation({
       icon: LayoutDashboard,
       badge: delayCount > 0 ? `${delayCount} Delay` : null,
       badgeColor: 'bg-rose-100 text-rose-700',
+    },
+    {
+      id: 'procurement' as TabKey,
+      label: 'Pengadaan & Pembelian (MRP)',
+      icon: ShoppingCart,
+      badge: `${poCount} PO`,
+      badgeColor: 'bg-teal-100 text-teal-800 font-bold',
     },
     {
       id: 'finance' as TabKey,

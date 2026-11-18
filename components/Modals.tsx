@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Sparkles } from 'lucide-react';
+import { X, Sparkles, ShoppingCart } from 'lucide-react';
 import { CutSize, InventoryItem, Machine, Order, OrderPriority, QCStatus } from '../lib/types';
+import { PurchaseOrder } from '../lib/financial-types';
 import { calculateYieldMetrics } from '../lib/calculations';
 
 interface ModalsProps {
@@ -16,6 +17,7 @@ interface ModalsProps {
   onAddBatch: (batch: any) => void;
   onAddMutation: (mutation: any) => void;
   onAddShipment: (shipment: any) => void;
+  onAddPO?: (po: PurchaseOrder) => void;
   selectedOrderForBatch?: Order | null;
 }
 
@@ -30,6 +32,7 @@ export default function Modals({
   onAddBatch,
   onAddMutation,
   onAddShipment,
+  onAddPO,
   selectedOrderForBatch,
 }: ModalsProps) {
   if (!activeModal) return null;
@@ -93,6 +96,18 @@ export default function Modals({
             onClose={onClose}
             onSubmit={(shipment) => {
               onAddShipment(shipment);
+              onClose();
+            }}
+          />
+        )}
+
+        {/* Modal: Buat PO Pembelian Bahan Baru */}
+        {activeModal === 'add-po' && onAddPO && (
+          <AddPOForm
+            orders={orders}
+            onClose={onClose}
+            onSubmit={(po) => {
+              onAddPO(po);
               onClose();
             }}
           />
@@ -428,7 +443,6 @@ function AddBatchForm({
   const [moisturePercent, setMoisturePercent] = useState<number>(12.2);
   const [notes, setNotes] = useState('Hasil homogen, lolos saringan 20 mesh.');
 
-  // Live calculated metrics
   const metrics = calculateYieldMetrics(rawInputKg, cleanCutKg, dustKg, stemKg, moisturePercent);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -920,6 +934,253 @@ function AddShipmentForm({
           className="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs"
         >
           Terbitkan Surat Jalan
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// 6. FORM BUAT PURCHASE ORDER (PENGADAAN BAHAN BAKU DARI PETANI / SUPPLIER)
+function AddPOForm({
+  orders,
+  onClose,
+  onSubmit,
+}: {
+  orders: Order[];
+  onClose: () => void;
+  onSubmit: (po: PurchaseOrder) => void;
+}) {
+  const [poNumber, setPoNumber] = useState(`PO-RAW-${new Date().getFullYear()}-${Math.floor(Math.random() * 800) + 100}`);
+  const [linkedOrderId, setLinkedOrderId] = useState(orders[0]?.id || '');
+  const [supplierName, setSupplierName] = useState('Koperasi Tani Cengkeh Trenggalek');
+  const [supplierContact, setSupplierContact] = useState('Pak Warno (0812-3456-7890)');
+  const [commodityType, setCommodityType] = useState<'Bunga Cengkeh Zanzibar Super' | 'Bunga Cengkeh Sikotok' | 'Cengkeh Kering Sortir Lokal'>('Bunga Cengkeh Zanzibar Super');
+  const [quantityKg, setQuantityKg] = useState<number>(5000);
+  const [unitPrice, setUnitPrice] = useState<number>(105000);
+  const [targetMoisturePercent, setTargetMoisturePercent] = useState<number>(12.0);
+  const [estimatedDays, setEstimatedDays] = useState<number>(3);
+  const [paymentTerms, setPaymentTerms] = useState<'Tempo 30 Hari' | 'DP 50% + Pelunasan' | 'Tunai / COD'>('Tempo 30 Hari');
+  const [notes, setNotes] = useState('');
+
+  const selectedOrder = orders.find((o) => o.id === linkedOrderId);
+
+  // Auto-suggest quantity based on linked customer order if changed
+  const handleLinkedOrderChange = (orderId: string) => {
+    setLinkedOrderId(orderId);
+    const ord = orders.find((o) => o.id === orderId);
+    if (ord) {
+      const suggestedRawKg = Math.round(ord.quantityKg / 0.89);
+      setQuantityKg(suggestedRawKg);
+      setNotes(`Pengadaan bahan baku untuk memenuhi pesanan ${ord.clientName} (${ord.orderNumber} - ${ord.cutSize})`);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const arrivalDate = new Date(Date.now() + estimatedDays * 24 * 3600 * 1000).toISOString().slice(0, 10);
+    const newPO: PurchaseOrder = {
+      id: `PUR-${Date.now().toString().slice(-5)}`,
+      poNumber,
+      linkedCustomerOrderId: linkedOrderId,
+      customerName: selectedOrder?.clientName,
+      supplierName,
+      supplierContact,
+      commodityType,
+      quantityKg,
+      receivedKg: 0,
+      unitPrice,
+      totalAmount: quantityKg * unitPrice,
+      orderDate: new Date().toISOString().slice(0, 10),
+      estimatedArrival: arrivalDate,
+      targetMoisturePercent,
+      status: 'PO Terkirim ke Supplier',
+      paymentTerms,
+      notes,
+    };
+    onSubmit(newPO);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="p-6">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700">
+            <ShoppingCart className="h-5 w-5" />
+          </span>
+          <h3 className="text-base font-bold text-slate-900">
+            Terbitkan Purchase Order (PO) Pembelian Bahan
+          </h3>
+        </div>
+        <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600">
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      <div className="mt-4 space-y-3.5 text-xs">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">Nomor PO Pembelian:</label>
+            <input
+              required
+              type="text"
+              value={poNumber}
+              onChange={(e) => setPoNumber(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono"
+            />
+          </div>
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">Hubungkan Order Pelanggan:</label>
+            <select
+              value={linkedOrderId}
+              onChange={(e) => handleLinkedOrderChange(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300"
+            >
+              <option value="">-- Pengadaan Mandiri (Stok Bebas) --</option>
+              {orders.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.clientName} ({o.quantityKg.toLocaleString('id-ID')} kg - {o.cutSize})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">Nama Supplier / Koperasi:</label>
+            <input
+              required
+              type="text"
+              value={supplierName}
+              onChange={(e) => setSupplierName(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300"
+            />
+          </div>
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">Kontak Petani / Pengepul:</label>
+            <input
+              required
+              type="text"
+              value={supplierContact}
+              onChange={(e) => setSupplierContact(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">Jenis Komoditas:</label>
+            <select
+              value={commodityType}
+              onChange={(e) => setCommodityType(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 font-medium"
+            >
+              <option value="Bunga Cengkeh Zanzibar Super">Bunga Cengkeh Zanzibar Super</option>
+              <option value="Bunga Cengkeh Sikotok">Bunga Cengkeh Sikotok</option>
+              <option value="Cengkeh Kering Sortir Lokal">Cengkeh Kering Sortir Lokal</option>
+            </select>
+          </div>
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">Syarat Kadar Air Maksimal:</label>
+            <input
+              required
+              type="number"
+              step="0.1"
+              value={targetMoisturePercent}
+              onChange={(e) => setTargetMoisturePercent(Number(e.target.value))}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-teal-700"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">Volume Pembelian (kg):</label>
+            <input
+              required
+              type="number"
+              min="100"
+              step="100"
+              value={quantityKg}
+              onChange={(e) => setQuantityKg(Number(e.target.value))}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold"
+            />
+          </div>
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">Harga Beli Satuan (Rp/kg):</label>
+            <input
+              required
+              type="number"
+              step="1000"
+              value={unitPrice}
+              onChange={(e) => setUnitPrice(Number(e.target.value))}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-slate-900"
+            />
+          </div>
+        </div>
+
+        {/* Live Total Calculation */}
+        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
+          <span className="font-semibold text-slate-600">Total Nilai Kontrak Pembelian:</span>
+          <span className="text-base font-bold text-emerald-700">
+            Rp {(quantityKg * unitPrice).toLocaleString('id-ID')}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">Estimasi Hari Pengiriman:</label>
+            <select
+              value={estimatedDays}
+              onChange={(e) => setEstimatedDays(Number(e.target.value))}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300"
+            >
+              <option value={1}>1 Hari (Besok Tiba)</option>
+              <option value={2}>2 Hari</option>
+              <option value={3}>3 Hari (Standar)</option>
+              <option value={5}>5 Hari (Luar Pulau)</option>
+            </select>
+          </div>
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">Ketentuan Pembayaran:</label>
+            <select
+              value={paymentTerms}
+              onChange={(e) => setPaymentTerms(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300"
+            >
+              <option value="Tempo 30 Hari">Tempo 30 Hari</option>
+              <option value="DP 50% + Pelunasan">DP 50% + Pelunasan</option>
+              <option value="Tunai / COD">Tunai / COD</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="font-semibold text-slate-700 block mb-1">Catatan Tambahan / Instruksi Armada:</label>
+          <input
+            type="text"
+            placeholder="Contoh: Pengiriman via armada truk Fuso, wajib terpal ganda"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-slate-300"
+          />
+        </div>
+      </div>
+
+      <div className="mt-6 flex justify-end gap-2 pt-3 border-t border-slate-100">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+        >
+          Batal
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs"
+        >
+          Terbitkan &amp; Kirim ke Supplier
         </button>
       </div>
     </form>

@@ -11,18 +11,22 @@ import InventoryModule from '../components/InventoryModule';
 import ShipmentModule from '../components/ShipmentModule';
 import DeepDiveAnalytics from '../components/DeepDiveAnalytics';
 import FinancialModule from '../components/FinancialModule';
+import ProcurementModule from '../components/ProcurementModule';
+import PricingModal from '../components/PricingModal';
 import Modals from '../components/Modals';
 
 import {
+  DEFAULT_PRICING_CONFIG,
   INITIAL_BATCHES,
   INITIAL_INVENTORY,
   INITIAL_MACHINES,
   INITIAL_MUTATIONS,
   INITIAL_ORDERS,
+  INITIAL_PURCHASE_ORDERS,
   INITIAL_SHIPMENTS,
 } from '../lib/initial-data';
 import { INITIAL_HRIS_PAYROLL_DATA } from '../lib/hris-integration';
-import { HRISPayrollAllocation } from '../lib/financial-types';
+import { HRISPayrollAllocation, PricingConfig, PurchaseOrder, PurchaseStatus } from '../lib/financial-types';
 import { BatchQC, InventoryItem, Machine, MachineStatus, Order, Shipment, ShipmentStatus, StockMutation } from '../lib/types';
 import { evaluateOrderDelay } from '../lib/calculations';
 
@@ -36,10 +40,13 @@ export default function HomePage() {
   const [inventory, setInventory] = useState<InventoryItem[]>(INITIAL_INVENTORY);
   const [mutations, setMutations] = useState<StockMutation[]>(INITIAL_MUTATIONS);
   const [shipments, setShipments] = useState<Shipment[]>(INITIAL_SHIPMENTS);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(INITIAL_PURCHASE_ORDERS);
+  const [pricing, setPricing] = useState<PricingConfig>(DEFAULT_PRICING_CONFIG);
   const [hrisPayroll, setHrisPayroll] = useState<HRISPayrollAllocation>(INITIAL_HRIS_PAYROLL_DATA);
 
   // Modal State
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [selectedOrderForBatch, setSelectedOrderForBatch] = useState<Order | null>(null);
 
   // Calculations for navigation badges
@@ -100,9 +107,12 @@ export default function HomePage() {
       })
     );
 
-    // Update Inventory: Add Finished Goods & Byproduct Dust
+    // Update Inventory: Add Finished Goods & Byproduct Dust, deduct raw material
     setInventory((prev) =>
       prev.map((item) => {
+        if (item.category === 'RAW_MATERIAL') {
+          return { ...item, currentStockKg: Math.max(0, item.currentStockKg - newBatch.rawInputKg) };
+        }
         if (item.category === 'FINISHED_GOODS' && item.sku.includes('06MM')) {
           return { ...item, currentStockKg: item.currentStockKg + newBatch.cleanCutKg };
         }
@@ -186,6 +196,58 @@ export default function HomePage() {
     setMutations((prev) => [mutOut, ...prev]);
   };
 
+  // Procurement Handlers
+  const handleAddPO = (newPO: PurchaseOrder) => {
+    setPurchaseOrders((prev) => [newPO, ...prev]);
+  };
+
+  const handleUpdatePOStatus = (poId: string, newStatus: PurchaseStatus) => {
+    setPurchaseOrders((prev) =>
+      prev.map((po) => (po.id === poId ? { ...po, status: newStatus } : po))
+    );
+  };
+
+  const handleReceiveGoods = (po: PurchaseOrder) => {
+    // 1. Mark PO as received
+    setPurchaseOrders((prev) =>
+      prev.map((item) =>
+        item.id === po.id
+          ? { ...item, status: 'Diterima Penuh (Selesai)', receivedKg: item.quantityKg }
+          : item
+      )
+    );
+
+    // 2. Add raw material into inventory
+    setInventory((prev) =>
+      prev.map((inv) =>
+        inv.category === 'RAW_MATERIAL' && inv.sku.includes('ZNZ')
+          ? { ...inv, currentStockKg: inv.currentStockKg + po.quantityKg }
+          : inv
+      )
+    );
+
+    // 3. Log stock mutation IN
+    const mutIn: StockMutation = {
+      id: `MUT-${Date.now().toString().slice(-5)}`,
+      date: new Date().toLocaleString('id-ID', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      type: 'IN',
+      itemId: 'INV-RAW-01',
+      itemName: po.commodityType,
+      category: 'RAW_MATERIAL',
+      quantityKg: po.quantityKg,
+      refDocument: po.poNumber,
+      partner: po.supplierName,
+      operator: 'Gudang Logistik (Penerimaan PO)',
+    };
+    setMutations((prev) => [mutIn, ...prev]);
+  };
+
   const handleUpdateOrderStatus = (orderId: string, newStatus: any) => {
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
@@ -199,7 +261,6 @@ export default function HomePage() {
   };
 
   const handleSyncHRIS = () => {
-    // Dynamically calculate latest overtime from order workload
     const rushOrders = orders.filter((o) => o.priority === 'Tinggi (Rush)' || o.priority === 'Ekspor Prioritas');
     const overtimeHoursCalculated = 20 + rushOrders.length * 8;
     const additionalOvertimeCost = overtimeHoursCalculated * 65000;
@@ -207,14 +268,21 @@ export default function HomePage() {
     setHrisPayroll((prev) => ({
       ...prev,
       overtimeDirectLabor: 3910000 + additionalOvertimeCost,
-      totalPayrollExpense: prev.directLaborTotal + 3910000 + additionalOvertimeCost + prev.indirectLaborTotal + prev.administrativeTotal + prev.bpjsCompanyTotal,
-      syncTimestamp: new Date().toLocaleString('id-ID', {
-        year: 'numeric',
-        month: 'short',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-      }) + ' WIB',
+      totalPayrollExpense:
+        prev.directLaborTotal +
+        3910000 +
+        additionalOvertimeCost +
+        prev.indirectLaborTotal +
+        prev.administrativeTotal +
+        prev.bpjsCompanyTotal,
+      syncTimestamp:
+        new Date().toLocaleString('id-ID', {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+        }) + ' WIB',
     }));
   };
 
@@ -226,6 +294,8 @@ export default function HomePage() {
       setInventory(INITIAL_INVENTORY);
       setMutations(INITIAL_MUTATIONS);
       setShipments(INITIAL_SHIPMENTS);
+      setPurchaseOrders(INITIAL_PURCHASE_ORDERS);
+      setPricing(DEFAULT_PRICING_CONFIG);
       setHrisPayroll(INITIAL_HRIS_PAYROLL_DATA);
     }
   };
@@ -245,6 +315,7 @@ export default function HomePage() {
           setSelectedOrderForBatch(null);
           setActiveModal(modal);
         }}
+        onOpenPricingModal={() => setIsPricingModalOpen(true)}
         onResetData={handleResetData}
       />
 
@@ -256,6 +327,7 @@ export default function HomePage() {
         delayCount={delayedOrders.length}
         batchCount={batches.length}
         machineCount={machines.length}
+        poCount={purchaseOrders.length}
       />
 
       {/* Main Content Area */}
@@ -271,6 +343,17 @@ export default function HomePage() {
           />
         )}
 
+        {activeTab === 'procurement' && (
+          <ProcurementModule
+            purchaseOrders={purchaseOrders}
+            customerOrders={orders}
+            inventory={inventory}
+            onOpenAddPO={() => setActiveModal('add-po')}
+            onUpdatePOStatus={handleUpdatePOStatus}
+            onReceiveGoods={handleReceiveGoods}
+          />
+        )}
+
         {activeTab === 'finance' && (
           <FinancialModule
             orders={orders}
@@ -278,7 +361,10 @@ export default function HomePage() {
             inventory={inventory}
             shipments={shipments}
             hrisPayroll={hrisPayroll}
+            pricing={pricing}
+            purchaseOrders={purchaseOrders}
             onSyncHRIS={handleSyncHRIS}
+            onOpenPricingModal={() => setIsPricingModalOpen(true)}
           />
         )}
 
@@ -348,13 +434,22 @@ export default function HomePage() {
         onAddBatch={handleAddBatch}
         onAddMutation={handleAddMutation}
         onAddShipment={handleAddShipment}
+        onAddPO={handleAddPO}
         selectedOrderForBatch={selectedOrderForBatch}
+      />
+
+      {/* Dynamic Pricing Configuration Modal */}
+      <PricingModal
+        isOpen={isPricingModalOpen}
+        onClose={() => setIsPricingModalOpen(false)}
+        pricing={pricing}
+        onSavePricing={setPricing}
       />
 
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
         <p>
-          CloveERP &middot; Sistem Terpadu Perajangan Cengkeh, HRIS Payroll &amp; Laporan Keuangan Akuntansi &middot; Siap Deploy di Vercel
+          CloveERP &middot; Sistem Terpadu Perajangan Cengkeh, Pengadaan Bahan Baku (MRP), HRIS Payroll &amp; Keuangan &middot; Siap Deploy di Vercel
         </p>
       </footer>
     </div>

@@ -10,13 +10,60 @@ export interface JournalEntry {
   date: string;
   referenceNumber: string; // e.g. BATCH-01, PO-088, PAYROLL-2026-11, DO-094
   description: string;
-  sourceModule: 'OPERASIONAL_PERAJANGAN' | 'HRIS_PAYROLL' | 'LOGISTIK_PENGIRIMAN' | 'GUDANG_INVENTORI';
+  sourceModule: 'OPERASIONAL_PERAJANGAN' | 'HRIS_PAYROLL' | 'LOGISTIK_PENGIRIMAN' | 'GUDANG_INVENTORI' | 'PENGADAAN_PEMBELIAN';
   items: {
     accountCode: string;
     accountName: string;
     debit: number;
     credit: number;
   }[];
+}
+
+export interface PricingConfig {
+  // Harga Beli Bahan Baku & Overhead (IDR)
+  rawClovePriceZanzibar: number; // default Rp 105.000 / kg
+  rawClovePriceSikotok: number;  // default Rp 95.000 / kg
+  packagingPricePerBag: number;  // default Rp 8.500 / sak 50kg
+  electricityPerKg: number;      // default Rp 850 / kg
+  bladeWearPerKg: number;        // default Rp 620 / kg
+
+  // Harga Jual Cengkeh Rajang Bersih per Ukuran (IDR / kg)
+  sellingPrice04mm: number;      // default Rp 155.000 / kg (Mikro Halus)
+  sellingPrice06mm: number;      // default Rp 145.000 / kg (Super Prima)
+  sellingPrice08mm: number;      // default Rp 138.000 / kg (Standar Kretek)
+  sellingPrice10mm: number;      // default Rp 132.000 / kg (Regular Medium)
+  sellingPrice12mm: number;      // default Rp 128.000 / kg (Kasar)
+
+  // Harga Jual Hasil Samping / Byproduct (IDR / kg)
+  byproductDustPrice: number;    // default Rp 24.000 / kg (Debu Siklon Dupa)
+  byproductStemPrice: number;    // default Rp 18.000 / kg (Gagang Minyak Atsiri)
+}
+
+export type PurchaseStatus =
+  | 'Draf Pengajuan'
+  | 'PO Terkirim ke Supplier'
+  | 'Dalam Pengiriman'
+  | 'Tiba & Uji Sampling QC'
+  | 'Diterima Penuh (Selesai)';
+
+export interface PurchaseOrder {
+  id: string;
+  poNumber: string;
+  linkedCustomerOrderId?: string;
+  customerName?: string;
+  supplierName: string;
+  supplierContact: string;
+  commodityType: 'Bunga Cengkeh Zanzibar Super' | 'Bunga Cengkeh Sikotok' | 'Cengkeh Kering Sortir Lokal';
+  quantityKg: number;
+  receivedKg: number;
+  unitPrice: number;
+  totalAmount: number;
+  orderDate: string;
+  estimatedArrival: string;
+  targetMoisturePercent: number; // Syarat mutu kadar air (e.g. 12.0%)
+  status: PurchaseStatus;
+  paymentTerms: 'Tempo 30 Hari' | 'DP 50% + Pelunasan' | 'Tunai / COD';
+  notes?: string;
 }
 
 export interface ProfitAndLossStatement {

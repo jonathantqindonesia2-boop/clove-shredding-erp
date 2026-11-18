@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Factory, Plus, RefreshCw, ShieldAlert, Sparkles } from 'lucide-react';
+import { Factory, Plus, RefreshCw, ShoppingCart, Sliders, Sparkles } from 'lucide-react';
 
 interface NavbarProps {
   totalCapacity: number;
   activeOrdersCount: number;
   onOpenModal: (modalName: string) => void;
+  onOpenPricingModal: () => void;
   onResetData: () => void;
 }
 
@@ -14,6 +15,7 @@ export default function Navbar({
   totalCapacity,
   activeOrdersCount,
   onOpenModal,
+  onOpenPricingModal,
   onResetData,
 }: NavbarProps) {
   return (
@@ -35,27 +37,46 @@ export default function Navbar({
               </span>
             </div>
             <p className="text-xs text-slate-500">
-              Sistem Terpadu Perajangan Cengkeh &middot; Order &rarr; Kapasitas &rarr; Mutu &rarr; Stok &rarr; Pengiriman
+              Sistem Terpadu: Order &rarr; Pembelian Bahan &rarr; Kapasitas &rarr; Mutu &rarr; HRIS &rarr; Keuangan
             </p>
           </div>
         </div>
 
         {/* Live Metrics & Quick Actions */}
-        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           {/* Quick Metrics */}
-          <div className="hidden lg:flex items-center gap-4 bg-slate-50 border border-slate-200 px-3.5 py-1.5 rounded-xl text-xs">
+          <div className="hidden xl:flex items-center gap-3 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs">
             <div>
-              <span className="text-slate-400 block">Total Throughput</span>
-              <span className="font-bold text-emerald-600 text-sm">{totalCapacity} kg/jam</span>
+              <span className="text-slate-400 block text-[10px]">Throughput</span>
+              <span className="font-bold text-emerald-600 text-xs">{totalCapacity} kg/j</span>
             </div>
-            <div className="h-6 w-px bg-slate-200"></div>
+            <div className="h-5 w-px bg-slate-200"></div>
             <div>
-              <span className="text-slate-400 block">Order Aktif</span>
-              <span className="font-bold text-slate-800 text-sm">{activeOrdersCount} Antrian</span>
+              <span className="text-slate-400 block text-[10px]">Order Aktif</span>
+              <span className="font-bold text-slate-800 text-xs">{activeOrdersCount} Antrian</span>
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Pricing Button */}
+          <button
+            onClick={onOpenPricingModal}
+            className="inline-flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold px-3 py-2 rounded-xl transition shadow-xs active:scale-95"
+            title="Update Harga Beli & Jual"
+          >
+            <Sliders className="h-3.5 w-3.5 text-amber-600" />
+            <span>Harga (Rp)</span>
+          </button>
+
+          {/* PO Pembelian Button */}
+          <button
+            onClick={() => onOpenModal('add-po')}
+            className="inline-flex items-center gap-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-300 text-xs font-semibold px-3 py-2 rounded-xl transition shadow-xs active:scale-95"
+          >
+            <ShoppingCart className="h-3.5 w-3.5 text-teal-600" />
+            <span>+ Beli Bahan</span>
+          </button>
+
+          {/* Terima Order Button */}
           <button
             onClick={() => onOpenModal('add-order')}
             className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition shadow-xs active:scale-95"
@@ -64,21 +85,13 @@ export default function Navbar({
             <span>Terima Order</span>
           </button>
 
+          {/* Input QC Batch */}
           <button
             onClick={() => onOpenModal('add-batch')}
             className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition shadow-xs active:scale-95"
           >
             <Sparkles className="h-4 w-4" />
-            <span>Input QC Batch</span>
-          </button>
-
-          <button
-            onClick={() => onOpenModal('add-machine')}
-            className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-medium px-3 py-2 rounded-xl transition active:scale-95"
-            title="Tambah Mesin Baru"
-          >
-            <Plus className="h-3.5 w-3.5 text-slate-500" />
-            <span>Mesin</span>
+            <span>Input QC</span>
           </button>
 
           <button
