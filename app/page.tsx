@@ -10,6 +10,7 @@ import MachinesCapacityModule from '../components/MachinesCapacityModule';
 import InventoryModule from '../components/InventoryModule';
 import ShipmentModule from '../components/ShipmentModule';
 import DeepDiveAnalytics from '../components/DeepDiveAnalytics';
+import FinancialModule from '../components/FinancialModule';
 import Modals from '../components/Modals';
 
 import {
@@ -20,6 +21,8 @@ import {
   INITIAL_ORDERS,
   INITIAL_SHIPMENTS,
 } from '../lib/initial-data';
+import { INITIAL_HRIS_PAYROLL_DATA } from '../lib/hris-integration';
+import { HRISPayrollAllocation } from '../lib/financial-types';
 import { BatchQC, InventoryItem, Machine, MachineStatus, Order, Shipment, ShipmentStatus, StockMutation } from '../lib/types';
 import { evaluateOrderDelay } from '../lib/calculations';
 
@@ -33,6 +36,7 @@ export default function HomePage() {
   const [inventory, setInventory] = useState<InventoryItem[]>(INITIAL_INVENTORY);
   const [mutations, setMutations] = useState<StockMutation[]>(INITIAL_MUTATIONS);
   const [shipments, setShipments] = useState<Shipment[]>(INITIAL_SHIPMENTS);
+  const [hrisPayroll, setHrisPayroll] = useState<HRISPayrollAllocation>(INITIAL_HRIS_PAYROLL_DATA);
 
   // Modal State
   const [activeModal, setActiveModal] = useState<string | null>(null);
@@ -52,7 +56,6 @@ export default function HomePage() {
   // Handlers
   const handleAddOrder = (newOrder: Order) => {
     setOrders((prev) => [newOrder, ...prev]);
-    // Also assign to machine
     setMachines((prev) =>
       prev.map((m) =>
         m.id === newOrder.machineId
@@ -195,6 +198,26 @@ export default function HomePage() {
     );
   };
 
+  const handleSyncHRIS = () => {
+    // Dynamically calculate latest overtime from order workload
+    const rushOrders = orders.filter((o) => o.priority === 'Tinggi (Rush)' || o.priority === 'Ekspor Prioritas');
+    const overtimeHoursCalculated = 20 + rushOrders.length * 8;
+    const additionalOvertimeCost = overtimeHoursCalculated * 65000;
+
+    setHrisPayroll((prev) => ({
+      ...prev,
+      overtimeDirectLabor: 3910000 + additionalOvertimeCost,
+      totalPayrollExpense: prev.directLaborTotal + 3910000 + additionalOvertimeCost + prev.indirectLaborTotal + prev.administrativeTotal + prev.bpjsCompanyTotal,
+      syncTimestamp: new Date().toLocaleString('id-ID', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }) + ' WIB',
+    }));
+  };
+
   const handleResetData = () => {
     if (confirm('Muat ulang seluruh data simulasi ke setelan awal?')) {
       setOrders(INITIAL_ORDERS);
@@ -203,6 +226,7 @@ export default function HomePage() {
       setInventory(INITIAL_INVENTORY);
       setMutations(INITIAL_MUTATIONS);
       setShipments(INITIAL_SHIPMENTS);
+      setHrisPayroll(INITIAL_HRIS_PAYROLL_DATA);
     }
   };
 
@@ -244,6 +268,17 @@ export default function HomePage() {
             shipments={shipments}
             onSelectTab={setActiveTab}
             onOpenModal={setActiveModal}
+          />
+        )}
+
+        {activeTab === 'finance' && (
+          <FinancialModule
+            orders={orders}
+            batches={batches}
+            inventory={inventory}
+            shipments={shipments}
+            hrisPayroll={hrisPayroll}
+            onSyncHRIS={handleSyncHRIS}
           />
         )}
 
@@ -319,7 +354,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
         <p>
-          CloveERP &middot; Sistem Monitoring &amp; Perajangan Cengkeh Terpadu &middot; Siap Deploy di Vercel &middot; Standar Mutu SNI &amp; Ekspor
+          CloveERP &middot; Sistem Terpadu Perajangan Cengkeh, HRIS Payroll &amp; Laporan Keuangan Akuntansi &middot; Siap Deploy di Vercel
         </p>
       </footer>
     </div>

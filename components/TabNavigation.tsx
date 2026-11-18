@@ -9,7 +9,7 @@ import {
   Boxes,
   Truck,
   TrendingUp,
-  AlertTriangle,
+  DollarSign,
 } from 'lucide-react';
 
 export type TabKey =
@@ -19,7 +19,8 @@ export type TabKey =
   | 'machines'
   | 'inventory'
   | 'shipments'
-  | 'analytics';
+  | 'analytics'
+  | 'finance';
 
 interface TabNavigationProps {
   activeTab: TabKey;
@@ -45,6 +46,13 @@ export default function TabNavigation({
       icon: LayoutDashboard,
       badge: delayCount > 0 ? `${delayCount} Delay` : null,
       badgeColor: 'bg-rose-100 text-rose-700',
+    },
+    {
+      id: 'finance' as TabKey,
+      label: 'Laporan Keuangan & HPP',
+      icon: DollarSign,
+      badge: 'HRIS Synced',
+      badgeColor: 'bg-emerald-100 text-emerald-800 font-bold',
     },
     {
       id: 'orders' as TabKey,

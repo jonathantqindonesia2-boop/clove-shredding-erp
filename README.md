@@ -1,65 +1,56 @@
-# CloveERP - Sistem Monitoring & Perajangan Cengkeh Terpadu
+# CloveERP - Sistem Terpadu Perajangan Cengkeh, HRIS & Laporan Keuangan
 
-> **Sistem Informasi Manajemen & Eksekutif Dashboard untuk Pabrik Perajangan Cengkeh (Clove Shredding & Cutting Plant)**  
+> **Sistem Enterprise Terintegrasi: Operasional Pabrik Rajang Cengkeh ↔ HRIS Payroll Tenaga Kerja ↔ Laporan Keuangan & HPP Manufaktur**  
 > Dibangun dengan Next.js 14 App Router, TypeScript, dan Tailwind CSS. Siap dideploy ke Vercel dengan satu klik.
 
 ---
 
-## 🌟 Fitur Utama Sistem
+## 🌟 Modul & Fitur Terintegrasi
 
-### 1. Penerimaan Order & Antrian Produksi (*Order Intake*)
-- Pencatatan purchase order dari pabrikan rokok kretek (e.g., PT Gudang Garam Tbk, PT Djarum, HM Sampoerna, PT Wismilak, dll).
-- Pemilihan spesifikasi ukuran rajangan:
-  - `0.4mm` (Mikro Halus - Sigaret Premium)
-  - `0.6mm` (Super Prima - Kretek Filter)
-  - `0.8mm` (Standar Kretek)
-  - `1.0mm` (Regular Medium)
-  - `1.2mm` (Extra Kasar)
-- Pelacakan kuantitas target vs realisasi kilogram yang telah diproses.
-- Alokasi mesin dan penentuan prioritas pengerjaan (Standar, Tinggi / Rush, Ekspor Prioritas).
+### 1. Sistem Laporan Keuangan & Akuntansi Manufaktur (*Financial & Cost Suite*)
+- **Laporan Laba Rugi Komprehensif (*Income Statement / P&L*):**
+  - Penjualan Cengkeh Rajang Prima ke pabrikan rokok (0.4mm, 0.6mm, 0.8mm, 1.0mm).
+  - Penjualan Byproduct: Debu Siklon (industri dupa) dan Gagang Cengkeh (minyak atsiri).
+  - Harga Pokok Penjualan (HPP / COGS) mencakup bahan baku, upah tenaga kerja langsung dari HRIS, dan overhead pabrik (listrik, asah pisau, kemasan, depresiasi).
+  - EBITDA, Beban Logistik Armada Truk, Beban Gaji Manajemen, Pajak PPh Badan (22%), dan Laba Bersih (*Net Income*).
+- **Neraca Keuangan (*Balance Sheet*):**
+  - Aktiva Lancar (Kas Bank, Piutang Usaha Klien, Persediaan Bahan Mentah, Rajang Prima, Debu & Gagang).
+  - Aktiva Tetap (Mesin Perajang Rotary/Guillotine, Truk Box, Akumulasi Penyusutan).
+  - Kewajiban (Hutang Petani Cengkeh, Akrual Gaji HRIS, Hutang Pajak).
+  - Ekuitas (Modal Disetor, Laba Ditahan, Laba Tahun Berjalan) dengan validasi keseimbangan otomatis (*Assets = Liabilities + Equity*).
+- **Analisis HPP & Unit Economics (Cost per Kg):**
+  - Rincian biaya per 1 kg rajangan cengkeh bersih: Bahan Baku (77%), Upah Operator HRIS (11%), Listrik & Pisau (6%), Kemasan & Logistik (6%).
+  - Spread margin keuntungan per kg (+Rp 27.000 / kg) dan persentase margin kotor.
+- **Buku Besar & Jurnal Otomatis (*Double-Entry General Ledger*):**
+  - Jurnal akuntansi otomatis terposting seketika terjadi batch pengerjaan, penerbitan Surat Jalan pengiriman, mutasi stok gudang, dan sinkronisasi penggajian HRIS.
 
-### 2. Monitoring Pengerjaan & Parameter Hasil Mutu (*Quality Control*)
-- Pencatatan real-time per batch perajangan (Shift, Operator, Mesin).
-- Formulasi parameter otomatis:
-  $$\text{Rendemen Prima (\%)} = \left(\frac{\text{Hasil Rajang Bersih (kg)}}{\text{Bahan Baku Masuk (kg)}}\right) \times 100\%$$
-  $$\text{Persentase Debu (\%)} = \left(\frac{\text{Debu Siklon (kg)}}{\text{Bahan Baku Masuk (kg)}}\right) \times 100\%$$
-  $$\text{Persentase Gagang (\%)} = \left(\frac{\text{Gagang Sortir (kg)}}{\text{Bahan Baku Masuk (kg)}}\right) \times 100\%$$
+### 2. Integrasi Real-Time dengan HRIS Core System (`hris-core-system`)
+- Terhubung langsung dengan basis data kepegawaian & payroll HRIS:
+  - **Tenaga Kerja Langsung (TKL - Akun COA 5102):** Upah operator mesin perajang (Budi Santoso, Agus Riyadi, Hendra Gunawan) dan kalkulasi lembur otomatis untuk pesanan prioritas (*rush orders*).
+  - **Biaya Overhead Pabrik (BOP - Akun COA 5104):** Upah teknisi pengasahan pisau, maintenance mesin, QC analyst, dan logistik gudang.
+  - **Beban Usaha / OPEX (Akun COA 6102):** Gaji direksi pabrik, HR specialist, dan tim finance & accounting.
+- Tombol **"Sinkronkan Payroll HRIS"** untuk sinkronisasi beban gaji dan lembur secara real-time.
+
+### 3. Penerimaan Order & Antrian Produksi (*Order Intake*)
+- Pencatatan PO klien (PT Gudang Garam Tbk, PT Djarum, HM Sampoerna, PT Wismilak, dll).
+- Pemilihan spesifikasi ukuran rajangan (`0.4mm`, `0.6mm`, `0.8mm`, `1.0mm`, `1.2mm`).
+- Alokasi mesin dan prioritas pengerjaan (*Standard*, *Rush*, *Export*).
+
+### 4. Monitoring Pengerjaan & Parameter Hasil Mutu (*Quality Control*)
+- Pencatatan hasil per batch: Bahan Baku Masuk, Hasil Rajang Prima, Debu Siklon, Gagang Sisa, dan Kadar Air (*Moisture %*).
 - Evaluasi otomatis parameter standar:
-  - **Rendemen Prima:** $\ge 88.0\%$ (Target Optimal $90\%$).
-  - **Debu Siklon:** $\le 6.5\%$ (Ambang batas maksimum $7.5\%$).
-  - **Kadar Air (*Moisture Content*):** $11.5\% - 13.0\%$.
-  - **Status QC Otomatis:** *Lolos Prima*, *Toleransi*, *Koreksi Kelembaban*, atau *Ditolak*.
+  - Rendemen Prima: $\ge 88.0\%$ (Target Optimal $90\%$).
+  - Debu Siklon: $\le 6.5\%$ (Ambang batas maksimum $7.5\%$).
+  - Kadar Air (*Moisture Content*): $11.5\% - 13.0\%$.
 
-### 3. Manajemen Mesin, Input Kapasitas & Evaluasi Keterlambatan
-- **Penambahan Mesin Dinamis:** Kemampuan mendaftarkan mesin baru ke armada pabrik lengkap dengan spesifikasi pisau dan target efisiensi OEE.
-- **Input & Slider Kapasitas Real-Time:** Penyesuaian kapasitas operasional mesin (50 - 600 kg/jam) secara dinamis.
-- **Mesin Kalkulasi Estimasi Waktu Penyelesaian:**
-  $$\text{Kapasitas Efektif (kg/jam)} = \text{Kapasitas Mesin} \times \left(\frac{\text{Efisiensi OEE}}{100}\right)$$
-  $$\text{Durasi Selesai (Jam)} = \frac{\text{Sisa Beban Order (kg)}}{\text{Kapasitas Efektif (kg/jam)}}$$
-  $$\text{Proyeksi Waktu Selesai} = \text{Waktu Mulai} + \text{Durasi Selesai}$$
-- **Deteksi Keterlambatan Otomatis (*Delay Evaluation Engine*):**
-  - Membandingkan proyeksi selesai dengan deadline pesanan pelanggan.
-  - Memunculkan alert visual, selisih jam defisit, dan rekomendasi mitigasi (naikkan slider kapasitas, alihkan antrian ke mesin idle, atau jadwalkan shift lembur).
+### 5. Manajemen Mesin, Input Kapasitas & Evaluasi Keterlambatan
+- Penambahan armada mesin baru dengan spesifikasi pisau dan target efisiensi OEE.
+- Slider kapasitas operasional dinamis ($50 - 600\text{ kg/jam}$).
+- *Delay Evaluation Engine* yang membandingkan proyeksi penyelesaian dengan deadline pesanan.
 
-### 4. Monitoring Stock In / Out Barang (*Integrated Inventory*)
-- Manajemen 4 kategori komoditas pabrik:
-  1. **Bahan Baku (*Raw Material*):** Bunga Cengkeh Kering (Zanzibar, Sikotok).
-  2. **Barang Jadi (*Finished Goods*):** Cengkeh Rajang Bersih per ukuran (0.4mm, 0.6mm, 0.8mm).
-  3. **Hasil Sampingan (*Byproduct Dust*):** Debu Cengkeh Siklon murni (dimonetisasi untuk industri dupa & ekstrak minyak).
-  4. **Gagang Cengkeh (*Clove Stems*):** Gagang sisa sortir untuk distilasi minyak eugenol.
-- Pemantauan batas minimum buffer stok dengan peringatan restock.
-- Buku kas mutasi barang (*Stock Mutation Ledger*) mencatat waktu, tipe (IN/OUT), kuantitas, nomor referensi dokumen, dan mitra/rekanan.
-
-### 5. Monitoring Pengiriman & Surat Jalan (*Dispatch Tracking*)
-- Penerbitan Surat Jalan (*Delivery Order* / DO).
-- Pencatatan armada truk ekspedisi, plat nomor polisi, nama pengemudi, kota tujuan pabrik klien, waktu keberangkatan (ETD), dan estimasi tiba (ETA).
-- Pipeline status pengiriman: *Persiapan Muat* &rarr; *Dalam Perjalanan* &rarr; *Tiba di Lokasi Pabrik* &rarr; *Selesai & Diterima*.
-
-### 6. Analisis Mendalam (*Deep-Dive Quality & Economic Analytics*)
-- **Korelasi Non-Linear Kadar Air vs Debu:** Visualisasi teknis mengapa kadar air $<10.5\%$ menyebabkan kerapuhan cengkeh dan lonjakan debu $>9\%$, serta kadar air $>13.8\%$ memicu getah eugenol lengket pada pisau pemotong.
-- **Valuasi Ekonomi Output:** Kalkulasi nilai rupiah dari hasil rajang prima, debu siklon, dan gagang sortir.
-- **Peringkat Efisiensi Mesin & Indikator Ketajaman Pisau.**
-- **Ekspor Data:** Fitur download laporan QC dalam format file `.csv`.
+### 6. Monitoring Stock In / Out Barang & Pengiriman (*Logistics & Dispatch*)
+- Inventori 4 kategori komoditas pabrik dengan mutasi stok masuk/keluar terverifikasi.
+- Penerbitan Surat Jalan (*Delivery Order* / DO) dengan nomor plat truk, driver, dan status live tracking.
 
 ---
 
@@ -83,22 +74,18 @@ Buka [http://localhost:3000](http://localhost:3000) pada browser Anda.
 
 ## ☁️ Deployment ke Vercel
 
-Proyek ini telah dikonfigurasi secara optimal untuk platform Vercel:
-
 1. Buka dashboard [Vercel](https://vercel.com).
-2. Klik **"Add New"** &rarr; **"Project"**.
-3. Hubungkan akun GitHub Anda dan pilih repository `jonathantqindonesia2-boop/clove-shredding-erp`.
-4. Framework Preset akan otomatis terdeteksi sebagai **Next.js**.
-5. Klik **"Deploy"**!
-6. Sistem ERP Perajangan Cengkeh akan live dalam hitungan detik.
+2. Hubungkan repository `jonathantqindonesia2-boop/clove-shredding-erp`.
+3. Klik **"Deploy"** (Otomatis mendeteksi Next.js 14).
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Arsitektur Teknologi
 
 - **Framework:** Next.js 14 (App Router)
 - **Library:** React 18
 - **Bahasa:** TypeScript
 - **Styling:** Tailwind CSS
-- **Ikonografi:** Lucide React
+- **Ikon:** Lucide React
+- **Integrasi Eksternal:** HRIS Core System (`hris-core-system.vercel.app`)
 - **Platform:** Vercel
