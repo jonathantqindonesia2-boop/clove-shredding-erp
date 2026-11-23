@@ -25,6 +25,7 @@ import { BatchQC, InventoryItem, Machine, Order, Shipment } from '../lib/types';
 import { HRISPayrollAllocation, JournalEntry, PricingConfig, PurchaseOrder } from '../lib/financial-types';
 import { generateFinancialStatements } from '../lib/financial-engine';
 import { HRIS_WORKERS } from '../lib/hris-integration';
+import { SparePart, SparePartStockMutation } from '../lib/sparepart-types';
 
 interface FinancialModuleProps {
   orders: Order[];
@@ -34,6 +35,8 @@ interface FinancialModuleProps {
   hrisPayroll: HRISPayrollAllocation;
   pricing: PricingConfig;
   purchaseOrders: PurchaseOrder[];
+  spareParts?: SparePart[];
+  sparePartMutations?: SparePartStockMutation[];
   onSyncHRIS: () => void;
   onOpenPricingModal: () => void;
 }
@@ -46,6 +49,8 @@ export default function FinancialModule({
   hrisPayroll,
   pricing,
   purchaseOrders,
+  spareParts = [],
+  sparePartMutations = [],
   onSyncHRIS,
   onOpenPricingModal,
 }: FinancialModuleProps) {
@@ -53,9 +58,19 @@ export default function FinancialModule({
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
-  // Compute live statements using dynamic pricing & purchase orders
+  // Compute live statements using dynamic pricing, purchase orders & spareparts
   const { pnl, balanceSheet, journalEntries, unitCostPerKg, averageSellingPricePerKg } =
-    generateFinancialStatements(orders, batches, inventory, shipments, hrisPayroll, pricing, purchaseOrders);
+    generateFinancialStatements(
+      orders,
+      batches,
+      inventory,
+      shipments,
+      hrisPayroll,
+      pricing,
+      purchaseOrders,
+      spareParts,
+      sparePartMutations
+    );
 
   const formatIDR = (num: number) => {
     return 'Rp ' + Math.round(num).toLocaleString('id-ID');
@@ -370,6 +385,17 @@ export default function FinancialModule({
                     <span>- Konsumsi Pengasahan &amp; Pisau (@{formatIDR(pricing.bladeWearPerKg)}/kg)</span>
                     <span>{formatIDR(pnl.cogs.factoryOverhead.bladeMaintenance)}</span>
                   </div>
+                  <div className="flex justify-between text-indigo-700 font-medium">
+                    <span className="flex items-center gap-1">
+                      <span>- Pemakaian Suku Cadang Mesin Terpasang (Gudang Part)</span>
+                      <span className="bg-indigo-50 text-indigo-700 text-[9px] px-1.5 py-0.2 rounded font-bold">
+                        DARI SPAREPART
+                      </span>
+                    </span>
+                    <span className="font-semibold text-indigo-900">
+                      {formatIDR(pnl.cogs.factoryOverhead.sparePartsMaintenance)}
+                    </span>
+                  </div>
                   <div className="flex justify-between">
                     <span>- Kemasan Sak Goni 50kg (@{formatIDR(pricing.packagingPricePerBag)}/sak)</span>
                     <span>{formatIDR(pnl.cogs.factoryOverhead.packagingSupplies)}</span>
@@ -514,6 +540,17 @@ export default function FinancialModule({
                     <span className="text-slate-600">Persediaan Hasil Samping (Debu &amp; Gagang)</span>
                     <span className="font-semibold text-slate-800">
                       {formatIDR(balanceSheet.assets.currentAssets.byproductInventory)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1 text-indigo-700 font-medium">
+                    <span className="flex items-center gap-1.5">
+                      <span>Persediaan Suku Cadang &amp; Komponen Mesin</span>
+                      <span className="bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.2 rounded font-bold">
+                        GUDANG PART
+                      </span>
+                    </span>
+                    <span className="font-semibold text-indigo-900">
+                      {formatIDR(balanceSheet.assets.currentAssets.sparePartInventory)}
                     </span>
                   </div>
                   <div className="flex justify-between py-2 border-t border-slate-200 font-bold text-slate-900">
@@ -935,7 +972,9 @@ export default function FinancialModule({
                 LOGISTIK_PENGIRIMAN: 'bg-blue-50 text-blue-700 border-blue-200',
                 GUDANG_INVENTORI: 'bg-amber-50 text-amber-700 border-amber-200',
                 PENGADAAN_PEMBELIAN: 'bg-teal-50 text-teal-700 border-teal-200',
-              }[jrn.sourceModule];
+                GUDANG_SPAREPART: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+                PERAWATAN_MESIN: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+              }[jrn.sourceModule] || 'bg-slate-50 text-slate-700 border-slate-200';
 
               return (
                 <div

@@ -30,6 +30,7 @@ import {
   SparePart,
   SparePartCategory,
   SparePartRequisition,
+  SparePartStockMutation,
 } from '../lib/sparepart-types';
 
 interface SparepartModuleProps {
@@ -38,7 +39,9 @@ interface SparepartModuleProps {
   lifespanTrackers: PartLifespanTracker[];
   maintenanceHistory: MaintenanceHistory[];
   requisitions: SparePartRequisition[];
+  mutations?: SparePartStockMutation[];
   onOpenAddRequisition: () => void;
+  onOpenAddStockIn?: () => void;
   onApproveAndInstallPart: (req: SparePartRequisition) => void;
   onUpdateRequisitionStatus: (reqId: string, newStatus: any) => void;
 }
@@ -49,15 +52,27 @@ export default function SparepartModule({
   lifespanTrackers,
   maintenanceHistory,
   requisitions,
+  mutations = [],
   onOpenAddRequisition,
+  onOpenAddStockIn,
   onApproveAndInstallPart,
   onUpdateRequisitionStatus,
 }: SparepartModuleProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'inventory' | 'lifespan' | 'history' | 'requisitions'>('lifespan');
+  const [activeSubTab, setActiveSubTab] = useState<'inventory' | 'lifespan' | 'history' | 'requisitions' | 'mutations'>('lifespan');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMachineFilter, setSelectedMachineFilter] = useState<string>('ALL');
+  const [mutationTypeFilter, setMutationTypeFilter] = useState<string>('ALL');
 
   const formatIDR = (num: number) => 'Rp ' + Math.round(num).toLocaleString('id-ID');
+
+  // Sparepart financial valuations
+  const totalValuation = spareParts.reduce((sum, p) => sum + p.stockQty * p.unitCost, 0);
+  const totalStockOutAmount = mutations
+    .filter((m) => m.type === 'OUT_MAINTENANCE')
+    .reduce((sum, m) => sum + m.totalAmount, 0);
+  const totalStockInAmount = mutations
+    .filter((m) => m.type === 'IN_PURCHASE')
+    .reduce((sum, m) => sum + m.totalAmount, 0);
 
   // Critical part alerts
   const criticalParts = lifespanTrackers.filter((t) => t.wearCondition === 'OVERDUE_REPLACE');
@@ -108,6 +123,23 @@ export default function SparepartModule({
     return matchesSearch && matchesMachine;
   });
 
+  const filteredMutations = mutations.filter((m) => {
+    const matchesSearch =
+      m.mutationNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.partName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.partCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (m.targetMachineCode && m.targetMachineCode.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (m.requisitionNumber && m.requisitionNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (m.purchasePoNumber && m.purchasePoNumber.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesType =
+      mutationTypeFilter === 'ALL' ? true : m.type === mutationTypeFilter;
+    const matchesMachine =
+      selectedMachineFilter === 'ALL'
+        ? true
+        : m.targetMachineCode === selectedMachineFilter || !m.targetMachineCode;
+    return matchesSearch && matchesType && matchesMachine;
+  });
+
   const getCategoryBadge = (cat: SparePartCategory) => {
     switch (cat) {
       case 'CUTTING_BLADE':
@@ -147,12 +179,23 @@ export default function SparepartModule({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            {onOpenAddStockIn && (
+              <button
+                onClick={onOpenAddStockIn}
+                className="inline-flex items-center gap-1.5 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-xs whitespace-nowrap active:scale-95"
+                title="Penerimaan Pembelian Sparepart Baru / Restock (+ Stock In)"
+              >
+                <ArrowDownLeft className="h-4 w-4" />
+                <span>+ Beli / Terima Part (Stock In)</span>
+              </button>
+            )}
+
             <button
               onClick={onOpenAddRequisition}
               className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-xs whitespace-nowrap active:scale-95"
             >
               <Plus className="h-4 w-4" />
-              <span>+ Minta Sparepart untuk Mesin</span>
+              <span>+ Minta Part untuk Mesin</span>
             </button>
           </div>
         </div>
@@ -160,27 +203,29 @@ export default function SparepartModule({
         {/* Quick KPI Overview */}
         <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-slate-700 text-xs">
           <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700">
-            <span className="text-slate-400 block text-[11px]">Total Item Sparepart</span>
-            <span className="text-base font-bold text-white">{spareParts.length} Tipe Part</span>
-            <span className="text-[10px] text-slate-400 block">Katalog Suku Cadang Aktif</span>
+            <span className="text-slate-400 block text-[11px]">Nilai Aset Gudang Part</span>
+            <span className="text-base font-bold text-emerald-400">{formatIDR(totalValuation)}</span>
+            <span className="text-[10px] text-slate-400 block">{spareParts.length} Tipe Komponen</span>
           </div>
 
           <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700">
-            <span className="text-slate-400 block text-[11px]">Part Overdue / Kritis</span>
-            <span className="text-base font-bold text-rose-400">{criticalParts.length} Komponen</span>
-            <span className="text-[10px] text-rose-300 block">Wajib Diganti Segera</span>
+            <span className="text-slate-400 block text-[11px]">Part Terpasang ke Mesin</span>
+            <span className="text-base font-bold text-indigo-400">{formatIDR(totalStockOutAmount)}</span>
+            <span className="text-[10px] text-indigo-300 block">Masuk HPP Laporan Keuangan</span>
           </div>
 
           <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700">
-            <span className="text-slate-400 block text-[11px]">Part Warning (Mendekati Aus)</span>
-            <span className="text-base font-bold text-amber-400">{warningParts.length} Komponen</span>
-            <span className="text-[10px] text-amber-300 block">Sisa Umur &lt; 35%</span>
+            <span className="text-slate-400 block text-[11px]">Part Kritis &amp; Warning</span>
+            <span className="text-base font-bold text-rose-400">
+              {criticalParts.length} Kritis / {warningParts.length} Warning
+            </span>
+            <span className="text-[10px] text-rose-300 block">Perlu Tindakan Mekanik</span>
           </div>
 
           <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700">
-            <span className="text-slate-400 block text-[11px]">Stok Kritis Gudang</span>
-            <span className="text-base font-bold text-teal-300">{lowStockParts.length} Item</span>
-            <span className="text-[10px] text-teal-200 block">&le; Buffer Minimum</span>
+            <span className="text-slate-400 block text-[11px]">Stok Buffer &le; Minimum</span>
+            <span className="text-base font-bold text-amber-300">{lowStockParts.length} Item Menipis</span>
+            <span className="text-[10px] text-amber-200 block">Perlu Order Pembelian (PO)</span>
           </div>
         </div>
       </div>
@@ -266,6 +311,18 @@ export default function SparepartModule({
           <History className="h-4 w-4" />
           <span>History Perawatan &amp; Kerusakan ({maintenanceHistory.length})</span>
         </button>
+
+        <button
+          onClick={() => setActiveSubTab('mutations')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition ${
+            activeSubTab === 'mutations'
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <ArrowDownLeft className="h-4 w-4" />
+          <span>Mutasi Stock In / Out ({mutations.length})</span>
+        </button>
       </div>
 
       {/* Filter and Search Bar */}
@@ -274,28 +331,45 @@ export default function SparepartModule({
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Cari Kode Mesin (MCH-...), Kode Part (PRT-...), Nama Suku Cadang, atau Teknisi..."
+            placeholder="Cari Kode Mesin (MCH-...), Kode Part (PRT-...), Nama Suku Cadang, No. PO / Tiket, atau Teknisi..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
           />
         </div>
 
-        {/* Machine Filter Selector */}
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-slate-500 font-medium whitespace-nowrap">Filter Mesin:</span>
-          <select
-            value={selectedMachineFilter}
-            onChange={(e) => setSelectedMachineFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 font-medium text-slate-700"
-          >
-            <option value="ALL">Semua Mesin</option>
-            {machines.map((m) => (
-              <option key={m.code} value={m.code}>
-                {m.code} - {m.name}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          {activeSubTab === 'mutations' && (
+            <div className="flex items-center gap-1">
+              <span className="text-slate-500 font-medium whitespace-nowrap">Tipe Mutasi:</span>
+              <select
+                value={mutationTypeFilter}
+                onChange={(e) => setMutationTypeFilter(e.target.value)}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 font-medium text-slate-700"
+              >
+                <option value="ALL">Semua Mutasi</option>
+                <option value="IN_PURCHASE">📥 Stock In (Pembelian)</option>
+                <option value="OUT_MAINTENANCE">📤 Stock Out (Pemasangan Mesin)</option>
+              </select>
+            </div>
+          )}
+
+          {/* Machine Filter Selector */}
+          <div className="flex items-center gap-1">
+            <span className="text-slate-500 font-medium whitespace-nowrap">Filter Mesin:</span>
+            <select
+              value={selectedMachineFilter}
+              onChange={(e) => setSelectedMachineFilter(e.target.value)}
+              className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 font-medium text-slate-700"
+            >
+              <option value="ALL">Semua Mesin</option>
+              {machines.map((m) => (
+                <option key={m.code} value={m.code}>
+                  {m.code} - {m.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -667,6 +741,197 @@ export default function SparepartModule({
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* SUB-TAB 5: MUTASI STOCK IN / OUT SUKU CADANG (LINKED TO PROCUREMENT & FINANCIALS) */}
+      {activeSubTab === 'mutations' && (
+        <div className="space-y-4">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+              <div className="flex items-center justify-between text-slate-500 mb-1">
+                <span>Total Stock In (Pembelian)</span>
+                <span className="p-1.5 rounded-lg bg-teal-50 text-teal-600">
+                  <ArrowDownLeft className="h-4 w-4" />
+                </span>
+              </div>
+              <div className="text-xl font-bold text-teal-700">
+                {formatIDR(totalStockInAmount)}
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">
+                Menambah saldo Persediaan Sparepart (Akun 1204)
+              </p>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+              <div className="flex items-center justify-between text-slate-500 mb-1">
+                <span>Total Stock Out (Pemasangan Mesin)</span>
+                <span className="p-1.5 rounded-lg bg-rose-50 text-rose-600">
+                  <ArrowUpRight className="h-4 w-4" />
+                </span>
+              </div>
+              <div className="text-xl font-bold text-rose-600">
+                {formatIDR(totalStockOutAmount)}
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">
+                Otomatis dibukukan ke Beban HPP Pemeliharaan (Akun 5107)
+              </p>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+              <div className="flex items-center justify-between text-slate-500 mb-1">
+                <span>Valuasi Persediaan Gudang</span>
+                <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
+                  <Boxes className="h-4 w-4" />
+                </span>
+              </div>
+              <div className="text-xl font-bold text-emerald-600">
+                {formatIDR(totalValuation)}
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">
+                Aset Lancar di Neraca Keuangan (Balance Sheet)
+              </p>
+            </div>
+          </div>
+
+          {/* Mutation Table */}
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+            <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">
+                  Riwayat Mutasi Stock In / Out Suku Cadang Terhubung
+                </h3>
+                <p className="text-slate-500">
+                  Setiap pengeluaran terhubung ke Kode Mesin, Tiket Permintaan, &amp; Log Perawatan; Setiap penerimaan terhubung ke Harga Beli &amp; PO
+                </p>
+              </div>
+              {onOpenAddStockIn && (
+                <button
+                  onClick={onOpenAddStockIn}
+                  className="inline-flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition shadow-xs self-start sm:self-auto"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>+ Input Pembelian / Stock In</span>
+                </button>
+              )}
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
+                  <tr>
+                    <th className="px-4 py-3">No. Mutasi &amp; Tanggal</th>
+                    <th className="px-4 py-3">Tipe Mutasi</th>
+                    <th className="px-4 py-3">Kode &amp; Nama Part</th>
+                    <th className="px-4 py-3 text-right">Qty</th>
+                    <th className="px-4 py-3 text-right">Harga Satuan (Rp)</th>
+                    <th className="px-4 py-3 text-right">Total Nilai (Rp)</th>
+                    <th className="px-4 py-3">Tautan Referensi (Mesin / PO)</th>
+                    <th className="px-4 py-3">Catatan &amp; Pelaksana</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredMutations.map((m) => {
+                    const isOut = m.type === 'OUT_MAINTENANCE' || m.type === 'OUT_SCRAP';
+                    return (
+                      <tr key={m.id} className="hover:bg-slate-50/70 transition">
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          <span className="font-mono font-bold text-slate-900 block">{m.mutationNumber}</span>
+                          <span className="text-[11px] text-slate-400">{m.date}</span>
+                        </td>
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          {isOut ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                              <ArrowUpRight className="h-3 w-3" />
+                              <span>Stock Out (Mesin)</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200">
+                              <ArrowDownLeft className="h-3 w-3" />
+                              <span>Stock In (Beli)</span>
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="font-mono font-bold text-slate-800 block">{m.partCode}</span>
+                          <span className="text-slate-600">{m.partName}</span>
+                        </td>
+                        <td className="px-4 py-3.5 text-right font-bold whitespace-nowrap">
+                          <span className={isOut ? 'text-rose-600' : 'text-teal-600'}>
+                            {isOut ? '-' : '+'}{m.quantity} {m.unit}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 text-right text-slate-700 whitespace-nowrap">
+                          {formatIDR(m.unitCost)}
+                        </td>
+                        <td className="px-4 py-3.5 text-right font-bold whitespace-nowrap">
+                          <span className={isOut ? 'text-rose-700' : 'text-teal-700'}>
+                            {formatIDR(m.totalAmount)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          {isOut ? (
+                            <div className="space-y-0.5 text-[11px]">
+                              {m.targetMachineCode && (
+                                <span className="inline-block font-mono font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 mr-1.5">
+                                  {m.targetMachineCode}
+                                </span>
+                              )}
+                              {m.requisitionNumber && (
+                                <span className="font-mono text-slate-600 block">
+                                  Tiket: {m.requisitionNumber}
+                                </span>
+                              )}
+                              {m.maintenanceLogNumber && (
+                                <span className="font-mono text-slate-500 block">
+                                  Log: {m.maintenanceLogNumber}
+                                </span>
+                              )}
+                              {m.technician && (
+                                <span className="text-slate-500 block">
+                                  Teknisi: {m.technician}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="space-y-0.5 text-[11px]">
+                              {m.purchasePoNumber && (
+                                <span className="font-mono font-bold text-teal-700 bg-teal-50 px-1.5 py-0.2 rounded border border-teal-200 block">
+                                  PO: {m.purchasePoNumber}
+                                </span>
+                              )}
+                              {m.supplierName && (
+                                <span className="text-slate-700 font-medium block">
+                                  Vendor: {m.supplierName}
+                                </span>
+                              )}
+                              {m.invoiceNumber && (
+                                <span className="font-mono text-slate-500 block">
+                                  Faktur: {m.invoiceNumber}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3.5 text-[11px] text-slate-500 max-w-xs">
+                          <p className="text-slate-700">{m.notes}</p>
+                          <span className="text-slate-400 block mt-0.5">Oleh: {m.performedBy}</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {filteredMutations.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-8 text-center text-slate-400">
+                        Tidak ada riwayat mutasi suku cadang yang sesuai dengan kriteria pencarian.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

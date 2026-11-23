@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Sparkles, ShoppingCart, Wrench } from 'lucide-react';
+import { X, Sparkles, ShoppingCart, Wrench, ArrowDownLeft } from 'lucide-react';
 import { CutSize, InventoryItem, Machine, Order, OrderPriority, QCStatus } from '../lib/types';
 import { PurchaseOrder } from '../lib/financial-types';
 import { MachineCodeDef, RequisitionUrgency, SparePart, SparePartRequisition } from '../lib/sparepart-types';
@@ -23,6 +23,16 @@ interface ModalsProps {
   spareParts?: SparePart[];
   machineCodeDefs?: MachineCodeDef[];
   onAddSparepartReq?: (req: SparePartRequisition) => void;
+  onAddSparepartStockIn?: (data: {
+    partCode: string;
+    quantity: number;
+    newUnitCost: number;
+    poNumber: string;
+    supplierName: string;
+    invoiceNumber: string;
+    notes: string;
+    performedBy: string;
+  }) => void;
 }
 
 export default function Modals({
@@ -41,6 +51,7 @@ export default function Modals({
   spareParts,
   machineCodeDefs,
   onAddSparepartReq,
+  onAddSparepartStockIn,
 }: ModalsProps) {
   if (!activeModal) return null;
 
@@ -128,6 +139,18 @@ export default function Modals({
             onClose={onClose}
             onSubmit={(req) => {
               onAddSparepartReq(req);
+              onClose();
+            }}
+          />
+        )}
+
+        {/* Modal: Penerimaan / Pembelian Sparepart (+ Stock In) */}
+        {activeModal === 'add-sparepart-stockin' && onAddSparepartStockIn && (
+          <AddSparepartStockInForm
+            spareParts={spareParts || []}
+            onClose={onClose}
+            onSubmit={(data) => {
+              onAddSparepartStockIn(data);
               onClose();
             }}
           />
@@ -1405,6 +1428,240 @@ function AddSparepartReqForm({
           className="px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-xs"
         >
           Kirim Tiket Permintaan
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// 8. FORM PENERIMAAN / PEMBELIAN SPAREPART (+ STOCK IN)
+function AddSparepartStockInForm({
+  spareParts,
+  onClose,
+  onSubmit,
+}: {
+  spareParts: SparePart[];
+  onClose: () => void;
+  onSubmit: (data: {
+    partCode: string;
+    quantity: number;
+    newUnitCost: number;
+    poNumber: string;
+    supplierName: string;
+    invoiceNumber: string;
+    notes: string;
+    performedBy: string;
+  }) => void;
+}) {
+  const [partCode, setPartCode] = useState(spareParts[0]?.partCode || 'PRT-CUT-BLD-01');
+  const selectedPart = spareParts.find((p) => p.partCode === partCode);
+
+  const [quantity, setQuantity] = useState(2);
+  const [newUnitCost, setNewUnitCost] = useState(selectedPart?.unitCost || 2850000);
+  const [poNumber, setPoNumber] = useState(`PO-SP-2026-${Math.floor(Math.random() * 900) + 100}`);
+  const [supplierName, setSupplierName] = useState(selectedPart?.supplier || 'PT Teknik Mandiri Presisi');
+  const [invoiceNumber, setInvoiceNumber] = useState(`INV-SP-${Math.floor(Math.random() * 9000) + 1000}`);
+  const [performedBy, setPerformedBy] = useState('Agus Riyadi (Gudang Maintenance)');
+  const [notes, setNotes] = useState('Penerimaan pengiriman sparepart restock sesuai pesanan pembelian');
+
+  const formatIDR = (num: number) => 'Rp ' + Math.round(num).toLocaleString('id-ID');
+  const totalPurchaseValue = Number(quantity) * Number(newUnitCost);
+
+  const handlePartChange = (code: string) => {
+    setPartCode(code);
+    const p = spareParts.find((item) => item.partCode === code);
+    if (p) {
+      setNewUnitCost(p.unitCost);
+      setSupplierName(p.supplier || 'PT Teknik Mandiri Presisi');
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      partCode,
+      quantity: Number(quantity),
+      newUnitCost: Number(newUnitCost),
+      poNumber,
+      supplierName,
+      invoiceNumber,
+      notes,
+      performedBy,
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="p-6">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <div className="p-2 rounded-xl bg-teal-50 text-teal-700">
+            <ArrowDownLeft className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-slate-900">Penerimaan Pembelian Sparepart (+ Stock In)</h3>
+            <p className="text-xs text-slate-500">Harga beli baru menjadi dasar penilaian HPP &amp; Persediaan di Laporan Keuangan</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="mt-4 space-y-4 text-xs">
+        {/* Pilih Sparepart */}
+        <div>
+          <label className="font-semibold text-slate-700 block mb-1">
+            Pilih Kode Part yang Diterima / Dibeli:
+          </label>
+          <select
+            value={partCode}
+            onChange={(e) => handlePartChange(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs font-semibold"
+          >
+            {spareParts.map((p) => (
+              <option key={p.partCode} value={p.partCode}>
+                {p.partCode} &mdash; {p.partName} [Stok Saat Ini: {p.stockQty} {p.unit}]
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Existing info */}
+        {selectedPart && (
+          <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-[11px]">
+            <div>
+              <span className="text-slate-400 block">Stok Gudang Sebelum In</span>
+              <span className="font-bold text-slate-800">{selectedPart.stockQty} {selectedPart.unit}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 block">Lokasi Rak Simpan</span>
+              <span className="font-semibold text-emerald-700">{selectedPart.storageBin}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 block">Harga Satuan Lama</span>
+              <span className="font-semibold text-slate-600">{formatIDR(selectedPart.unitCost)}</span>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3">
+          {/* Harga Beli Satuan Baru (Input) */}
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">
+              Harga Beli Satuan Baru (Rp):
+            </label>
+            <input
+              type="number"
+              min={1000}
+              step={1000}
+              value={newUnitCost}
+              onChange={(e) => setNewUnitCost(Math.max(0, parseInt(e.target.value) || 0))}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 font-semibold text-emerald-700"
+              required
+            />
+            <span className="text-[10px] text-slate-400 mt-0.5 block">Update harga beli dasar</span>
+          </div>
+
+          {/* Jumlah / Qty Diterima */}
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">
+              Jumlah Diterima ({selectedPart?.unit || 'Unit'}):
+            </label>
+            <input
+              type="number"
+              min={1}
+              value={quantity}
+              onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 font-semibold"
+              required
+            />
+            <span className="text-[10px] text-slate-400 mt-0.5 block">Menambah kuantitas fisik</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">Nomor PO Pembelian:</label>
+            <input
+              type="text"
+              value={poNumber}
+              onChange={(e) => setPoNumber(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono"
+              required
+            />
+          </div>
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">Nomor Surat Jalan / Faktur:</label>
+            <input
+              type="text"
+              value={invoiceNumber}
+              onChange={(e) => setInvoiceNumber(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="font-semibold text-slate-700 block mb-1">Nama Supplier / Vendor Sparepart:</label>
+          <input
+            type="text"
+            value={supplierName}
+            onChange={(e) => setSupplierName(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-slate-300"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="font-semibold text-slate-700 block mb-1">Petugas Penerima Gudang:</label>
+          <input
+            type="text"
+            value={performedBy}
+            onChange={(e) => setPerformedBy(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-slate-300"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="font-semibold text-slate-700 block mb-1">Catatan Tambahan:</label>
+          <input
+            type="text"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-slate-300"
+          />
+        </div>
+
+        {/* Total Purchase Value Box */}
+        <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl space-y-1">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-teal-900 font-semibold">Total Nilai Pembelian Suku Cadang:</span>
+            <span className="text-sm font-bold text-teal-700">{formatIDR(totalPurchaseValue)}</span>
+          </div>
+          <p className="text-[10px] text-teal-800">
+            &bull; Otomatis mendebit Akun 1204 (Persediaan Suku Cadang Mesin) di Neraca dan mengkredit Hutang Supplier (Akun 2104).
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-6 flex justify-end gap-2 pt-3 border-t border-slate-100">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+        >
+          Batal
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 text-xs font-semibold bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-xs"
+        >
+          Terima Barang &amp; Masuk Gudang
         </button>
       </div>
     </form>

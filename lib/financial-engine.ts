@@ -9,6 +9,7 @@ import {
   PurchaseOrder,
 } from './financial-types';
 import { DEFAULT_PRICING_CONFIG } from './initial-data';
+import { SparePart, SparePartStockMutation } from './sparepart-types';
 
 export const FACTORY_COA: ChartOfAccount[] = [
   { code: '1001', name: 'Kas & Rekening Operasional Bank', category: 'ASSET', normalBalance: 'DEBIT' },
@@ -16,12 +17,14 @@ export const FACTORY_COA: ChartOfAccount[] = [
   { code: '1201', name: 'Persediaan Bahan Baku Bunga Cengkeh', category: 'ASSET', normalBalance: 'DEBIT' },
   { code: '1202', name: 'Persediaan Cengkeh Rajang Jadi (FG)', category: 'ASSET', normalBalance: 'DEBIT' },
   { code: '1203', name: 'Persediaan Hasil Samping (Debu & Gagang)', category: 'ASSET', normalBalance: 'DEBIT' },
+  { code: '1204', name: 'Persediaan Suku Cadang & Komponen Mesin', category: 'ASSET', normalBalance: 'DEBIT' },
   { code: '1501', name: 'Mesin Perajang Rotary & Sistem Siklon', category: 'ASSET', normalBalance: 'DEBIT' },
   { code: '1502', name: 'Armada Truk Ekspedisi Pendingin', category: 'ASSET', normalBalance: 'DEBIT' },
   { code: '1599', name: 'Akumulasi Penyusutan Aset Tetap', category: 'ASSET', normalBalance: 'CREDIT' },
   { code: '2101', name: 'Hutang Usaha Petani & Pengepul Cengkeh', category: 'LIABILITY', normalBalance: 'CREDIT' },
   { code: '2102', name: 'Hutang Gaji & Lembur Karyawan (HRIS)', category: 'LIABILITY', normalBalance: 'CREDIT' },
   { code: '2103', name: 'Hutang Pajak PPh & PPN', category: 'LIABILITY', normalBalance: 'CREDIT' },
+  { code: '2104', name: 'Hutang Usaha Supplier Suku Cadang & Teknik', category: 'LIABILITY', normalBalance: 'CREDIT' },
   { code: '3001', name: 'Modal Disetor Pemegang Saham', category: 'EQUITY', normalBalance: 'CREDIT' },
   { code: '3101', name: 'Laba Ditahan (Retained Earnings)', category: 'EQUITY', normalBalance: 'CREDIT' },
   { code: '4101', name: 'Pendapatan Penjualan Cengkeh Rajang Prima', category: 'REVENUE', normalBalance: 'CREDIT' },
@@ -33,6 +36,7 @@ export const FACTORY_COA: ChartOfAccount[] = [
   { code: '5104', name: 'Beban Pokok: Asah & Penggantian Pisau', category: 'COGS', normalBalance: 'DEBIT' },
   { code: '5105', name: 'Beban Pokok: Kemasan Sak Goni & Plastik', category: 'COGS', normalBalance: 'DEBIT' },
   { code: '5106', name: 'Beban Pokok: Penyusutan Mesin Pabrik', category: 'COGS', normalBalance: 'DEBIT' },
+  { code: '5107', name: 'Beban Pokok: Pemakaian Suku Cadang & Perawatan Mesin', category: 'COGS', normalBalance: 'DEBIT' },
   { code: '6101', name: 'Beban Logistik, Bahan Bakar Truk & Tol', category: 'EXPENSE', normalBalance: 'DEBIT' },
   { code: '6102', name: 'Beban Gaji Manajemen & Administrasi (HRIS)', category: 'EXPENSE', normalBalance: 'DEBIT' },
   { code: '6103', name: 'Beban Operasional Kantor & Pemeliharaan', category: 'EXPENSE', normalBalance: 'DEBIT' },
@@ -45,7 +49,9 @@ export function generateFinancialStatements(
   shipments: Shipment[],
   hrisPayroll: HRISPayrollAllocation,
   pricing: PricingConfig = DEFAULT_PRICING_CONFIG,
-  purchaseOrders: PurchaseOrder[] = []
+  purchaseOrders: PurchaseOrder[] = [],
+  spareParts: SparePart[] = [],
+  sparePartMutations: SparePartStockMutation[] = []
 ): {
   pnl: ProfitAndLossStatement;
   balanceSheet: BalanceSheetStatement;
@@ -91,9 +97,13 @@ export function generateFinancialStatements(
   // Factory Overhead (BOP) dinamis
   const powerElectricity = Math.round(totalRawInputKg * pricing.electricityPerKg);
   const bladeMaintenance = Math.round(totalRawInputKg * pricing.bladeWearPerKg);
+  // Biaya pemakaian suku cadang aktual dari mutasi OUT_MAINTENANCE mesin
+  const sparePartsMaintenance = sparePartMutations
+    .filter((m) => m.type === 'OUT_MAINTENANCE')
+    .reduce((sum, m) => sum + m.totalAmount, 0);
   const packagingSupplies = Math.round((totalProcessedKg / 50) * pricing.packagingPricePerBag);
   const depreciationMachines = 12500000;
-  const totalOverhead = powerElectricity + bladeMaintenance + packagingSupplies + depreciationMachines;
+  const totalOverhead = powerElectricity + bladeMaintenance + sparePartsMaintenance + packagingSupplies + depreciationMachines;
 
   const totalCOGS = directMaterialsCost + directLaborCost + totalOverhead;
   const grossProfit = totalRevenue - totalCOGS;
@@ -127,6 +137,7 @@ export function generateFinancialStatements(
       factoryOverhead: {
         powerElectricity,
         bladeMaintenance,
+        sparePartsMaintenance,
         packagingSupplies,
         depreciationMachines,
         totalOverhead,
@@ -155,11 +166,12 @@ export function generateFinancialStatements(
   const rawMaterialInventory = rawStock * rawMaterialPricePerKg;
   const finishedGoodsInventory = fgStock * (totalProcessedKg > 0 ? Math.round(totalCOGS / totalProcessedKg) : 118000);
   const byproductInventory = dustStock * pricing.byproductDustPrice;
+  const sparePartInventory = spareParts.reduce((sum, p) => sum + p.stockQty * p.unitCost, 0);
 
   const cashAndBank = 1250000000 + netIncome * 0.45;
   const accountsReceivable = totalRevenue * 0.35;
   const totalCurrentAssets =
-    cashAndBank + accountsReceivable + rawMaterialInventory + finishedGoodsInventory + byproductInventory;
+    cashAndBank + accountsReceivable + rawMaterialInventory + finishedGoodsInventory + byproductInventory + sparePartInventory;
 
   const shreddingMachinery = 650000000;
   const transportVehicles = 420000000;
@@ -191,6 +203,7 @@ export function generateFinancialStatements(
         rawMaterialInventory,
         finishedGoodsInventory,
         byproductInventory,
+        sparePartInventory,
         totalCurrentAssets,
       },
       fixedAssets: {
@@ -281,6 +294,40 @@ export function generateFinancialStatements(
         items: [
           { accountCode: '1201', accountName: 'Persediaan Bahan Baku Bunga Cengkeh', debit: po.totalAmount, credit: 0 },
           { accountCode: '2101', accountName: 'Hutang Usaha Petani & Pengepul Cengkeh', debit: 0, credit: po.totalAmount },
+        ],
+      });
+    });
+
+  // Tambahkan jurnal otomatis dari Pengeluaran Suku Cadang Mesin (OUT_MAINTENANCE)
+  sparePartMutations
+    .filter((m) => m.type === 'OUT_MAINTENANCE')
+    .forEach((mut, idx) => {
+      journalEntries.push({
+        id: `JRN-SP-OUT-${idx + 1}`,
+        date: mut.date,
+        referenceNumber: mut.requisitionNumber || mut.mutationNumber,
+        description: `Pengakuan Pemakaian Suku Cadang ${mut.partName} (${mut.partCode}) pada Mesin ${mut.targetMachineCode || 'Pabrik'} [${mut.quantity} ${mut.unit}]`,
+        sourceModule: 'PERAWATAN_MESIN',
+        items: [
+          { accountCode: '5107', accountName: 'Beban Pokok: Pemakaian Suku Cadang & Perawatan Mesin', debit: mut.totalAmount, credit: 0 },
+          { accountCode: '1204', accountName: 'Persediaan Suku Cadang & Komponen Mesin', debit: 0, credit: mut.totalAmount },
+        ],
+      });
+    });
+
+  // Tambahkan jurnal otomatis dari Penerimaan Pembelian Suku Cadang (IN_PURCHASE)
+  sparePartMutations
+    .filter((m) => m.type === 'IN_PURCHASE')
+    .forEach((mut, idx) => {
+      journalEntries.push({
+        id: `JRN-SP-IN-${idx + 1}`,
+        date: mut.date,
+        referenceNumber: mut.purchasePoNumber || mut.mutationNumber,
+        description: `Penerimaan Pembelian Suku Cadang ${mut.partName} dari ${mut.supplierName || 'Supplier'} (${mut.quantity} ${mut.unit} @ Rp ${mut.unitCost.toLocaleString('id-ID')})`,
+        sourceModule: 'GUDANG_SPAREPART',
+        items: [
+          { accountCode: '1204', accountName: 'Persediaan Suku Cadang & Komponen Mesin', debit: mut.totalAmount, credit: 0 },
+          { accountCode: '2104', accountName: 'Hutang Usaha Supplier Suku Cadang & Teknik', debit: 0, credit: mut.totalAmount },
         ],
       });
     });

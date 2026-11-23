@@ -30,6 +30,7 @@ import {
   INITIAL_MAINTENANCE_HISTORY,
   INITIAL_PART_LIFESPAN_TRACKERS,
   INITIAL_REQUISITIONS,
+  INITIAL_SPAREPART_MUTATIONS,
   INITIAL_SPAREPARTS,
   STANDARDIZED_MACHINES,
 } from '../lib/sparepart-data';
@@ -42,6 +43,7 @@ import {
   RequisitionStatus,
   SparePart,
   SparePartRequisition,
+  SparePartStockMutation,
 } from '../lib/sparepart-types';
 import { BatchQC, InventoryItem, Machine, MachineStatus, Order, Shipment, ShipmentStatus, StockMutation } from '../lib/types';
 import { evaluateOrderDelay } from '../lib/calculations';
@@ -66,6 +68,7 @@ export default function HomePage() {
   const [lifespanTrackers, setLifespanTrackers] = useState<PartLifespanTracker[]>(INITIAL_PART_LIFESPAN_TRACKERS);
   const [maintenanceHistory, setMaintenanceHistory] = useState<MaintenanceHistory[]>(INITIAL_MAINTENANCE_HISTORY);
   const [requisitions, setRequisitions] = useState<SparePartRequisition[]>(INITIAL_REQUISITIONS);
+  const [sparePartMutations, setSparePartMutations] = useState<SparePartStockMutation[]>(INITIAL_SPAREPART_MUTATIONS);
 
   // Modal State
   const [activeModal, setActiveModal] = useState<string | null>(null);
@@ -383,7 +386,32 @@ export default function HomePage() {
     };
     setMaintenanceHistory((prev) => [newLog, ...prev]);
 
-    // 5. Kembalikan status mesin menjadi 'Running' jika sebelumnya dalam perbaikan/asah pisau
+    // 5. Catat Mutasi Stock Out Gudang Sparepart (Link ke Permintaan & Mesin)
+    const targetPart = spareParts.find((p) => p.partCode === req.partCode);
+    const unitCost = targetPart?.unitCost || (req.quantity > 0 ? req.estimatedCost / req.quantity : 0);
+    const newStockOut: SparePartStockMutation = {
+      id: `spmut-${Date.now()}`,
+      mutationNumber: `TRX-SP-${Math.floor(Math.random() * 9000) + 1000}`,
+      date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      type: 'OUT_MAINTENANCE',
+      partCode: req.partCode,
+      partName: req.partName,
+      quantity: req.quantity,
+      unit: targetPart?.unit || 'Pcs',
+      unitCost: unitCost,
+      totalAmount: req.quantity * unitCost,
+      targetMachineCode: req.machineCode,
+      targetMachineName: req.machineName,
+      requisitionId: req.id,
+      requisitionNumber: req.reqNumber,
+      maintenanceLogNumber: newLog.logNumber,
+      technician: req.requestedBy,
+      notes: `Pengeluaran part untuk pemasangan mesin ${req.machineCode}: ${req.reason}`,
+      performedBy: 'Gudang Maintenance',
+    };
+    setSparePartMutations((prev) => [newStockOut, ...prev]);
+
+    // 6. Kembalikan status mesin menjadi 'Running' jika sebelumnya dalam perbaikan/asah pisau
     setMachines((prev) =>
       prev.map((m) => {
         const isTarget =
@@ -402,6 +430,54 @@ export default function HomePage() {
     );
   };
 
+  const handleAddSparepartStockIn = (data: {
+    partCode: string;
+    quantity: number;
+    newUnitCost: number;
+    poNumber: string;
+    supplierName: string;
+    invoiceNumber: string;
+    notes: string;
+    performedBy: string;
+  }) => {
+    // 1. Tambah stok gudang sparepart & update harga beli terbaru sebagai dasar HPP
+    setSpareParts((prev) =>
+      prev.map((p) => {
+        if (p.partCode === data.partCode) {
+          return {
+            ...p,
+            stockQty: p.stockQty + data.quantity,
+            unitCost: data.newUnitCost,
+            supplier: data.supplierName || p.supplier,
+          };
+        }
+        return p;
+      })
+    );
+
+    const part = spareParts.find((p) => p.partCode === data.partCode);
+
+    // 2. Catat Mutasi Stock In (Pembelian Baru)
+    const inMutation: SparePartStockMutation = {
+      id: `spmut-${Date.now()}`,
+      mutationNumber: `TRX-SP-${Math.floor(Math.random() * 9000) + 1000}`,
+      date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      type: 'IN_PURCHASE',
+      partCode: data.partCode,
+      partName: part?.partName || 'Sparepart',
+      quantity: data.quantity,
+      unit: part?.unit || 'Pcs',
+      unitCost: data.newUnitCost,
+      totalAmount: data.quantity * data.newUnitCost,
+      purchasePoNumber: data.poNumber,
+      supplierName: data.supplierName,
+      invoiceNumber: data.invoiceNumber,
+      notes: data.notes || 'Penerimaan pembelian suku cadang restock',
+      performedBy: data.performedBy || 'Gudang Maintenance',
+    };
+    setSparePartMutations((prev) => [inMutation, ...prev]);
+  };
+
   const handleResetData = () => {
     if (confirm('Muat ulang seluruh data simulasi ke setelan awal?')) {
       setOrders(INITIAL_ORDERS);
@@ -418,6 +494,7 @@ export default function HomePage() {
       setLifespanTrackers(INITIAL_PART_LIFESPAN_TRACKERS);
       setMaintenanceHistory(INITIAL_MAINTENANCE_HISTORY);
       setRequisitions(INITIAL_REQUISITIONS);
+      setSparePartMutations(INITIAL_SPAREPART_MUTATIONS);
     }
   };
 
@@ -485,6 +562,8 @@ export default function HomePage() {
             hrisPayroll={hrisPayroll}
             pricing={pricing}
             purchaseOrders={purchaseOrders}
+            spareParts={spareParts}
+            sparePartMutations={sparePartMutations}
             onSyncHRIS={handleSyncHRIS}
             onOpenPricingModal={() => setIsPricingModalOpen(true)}
           />
@@ -527,7 +606,9 @@ export default function HomePage() {
             lifespanTrackers={lifespanTrackers}
             maintenanceHistory={maintenanceHistory}
             requisitions={requisitions}
+            mutations={sparePartMutations}
             onOpenAddRequisition={() => setActiveModal('add-sparepart-req')}
+            onOpenAddStockIn={() => setActiveModal('add-sparepart-stockin')}
             onApproveAndInstallPart={handleApproveAndInstallPart}
             onUpdateRequisitionStatus={handleUpdateRequisitionStatus}
           />
@@ -574,6 +655,7 @@ export default function HomePage() {
         spareParts={spareParts}
         machineCodeDefs={machinesList}
         onAddSparepartReq={handleAddSparepartReq}
+        onAddSparepartStockIn={handleAddSparepartStockIn}
       />
 
       {/* Dynamic Pricing Configuration Modal */}

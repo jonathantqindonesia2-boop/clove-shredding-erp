@@ -91,3 +91,34 @@ export interface SparePartRequisition {
   installedDate?: string;
   estimatedCost: number;
 }
+
+export type SparePartMutationType = 'IN_PURCHASE' | 'IN_ADJUSTMENT' | 'OUT_MAINTENANCE' | 'OUT_SCRAP';
+
+export interface SparePartStockMutation {
+  id: string; // e.g. SPMUT-2026-11-001
+  mutationNumber: string; // e.g. TRX-SP-2026-091
+  date: string; // e.g. 2026-11-18 14:20
+  type: SparePartMutationType;
+  partCode: string; // PRT-CUT-BLD-01
+  partName: string;
+  quantity: number;
+  unit: string;
+  unitCost: number; // Harga beli satuan (Rp)
+  totalAmount: number; // quantity * unitCost
+
+  // Link ke Permintaan & Mesin (jika OUT_MAINTENANCE)
+  targetMachineCode?: string; // MCH-ROT-01
+  targetMachineName?: string;
+  requisitionId?: string;
+  requisitionNumber?: string; // REQ-SP-2026-021
+  maintenanceLogNumber?: string; // MNT-2026-042
+  technician?: string; // Hendra Gunawan
+
+  // Link ke Pembelian / PO (jika IN_PURCHASE)
+  purchasePoNumber?: string; // PO-SP-2026-012
+  supplierName?: string; // PT Teknik Mandiri Presisi
+  invoiceNumber?: string;
+
+  notes: string;
+  performedBy: string;
+}

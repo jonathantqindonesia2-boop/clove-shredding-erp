@@ -10,7 +10,14 @@ export interface JournalEntry {
   date: string;
   referenceNumber: string; // e.g. BATCH-01, PO-088, PAYROLL-2026-11, DO-094
   description: string;
-  sourceModule: 'OPERASIONAL_PERAJANGAN' | 'HRIS_PAYROLL' | 'LOGISTIK_PENGIRIMAN' | 'GUDANG_INVENTORI' | 'PENGADAAN_PEMBELIAN';
+  sourceModule:
+    | 'OPERASIONAL_PERAJANGAN'
+    | 'HRIS_PAYROLL'
+    | 'LOGISTIK_PENGIRIMAN'
+    | 'GUDANG_INVENTORI'
+    | 'PENGADAAN_PEMBELIAN'
+    | 'GUDANG_SPAREPART'
+    | 'PERAWATAN_MESIN';
   items: {
     accountCode: string;
     accountName: string;
@@ -83,6 +90,7 @@ export interface ProfitAndLossStatement {
     factoryOverhead: {
       powerElectricity: number; // Listrik mesin perajang & blower
       bladeMaintenance: number; // Asah & ganti pisau
+      sparePartsMaintenance: number; // Nilai pemakaian suku cadang mesin aktual (DARI MUTASI STOCK OUT)
       packagingSupplies: number; // Sak goni & plastik kedap
       depreciationMachines: number; // Penyusutan mesin rajang
       totalOverhead: number;
@@ -112,6 +120,7 @@ export interface BalanceSheetStatement {
       rawMaterialInventory: number; // Nilai rupiah cengkeh mentah di gudang
       finishedGoodsInventory: number; // Nilai rupiah cengkeh rajang siap kirim
       byproductInventory: number; // Nilai debu siklon & gagang
+      sparePartInventory: number; // Nilai rupiah persediaan suku cadang mesin di gudang
       totalCurrentAssets: number;
     };
     fixedAssets: {
