@@ -12,6 +12,7 @@ import ShipmentModule from '../components/ShipmentModule';
 import DeepDiveAnalytics from '../components/DeepDiveAnalytics';
 import FinancialModule from '../components/FinancialModule';
 import ProcurementModule from '../components/ProcurementModule';
+import SparepartModule from '../components/SparepartModule';
 import PricingModal from '../components/PricingModal';
 import Modals from '../components/Modals';
 
@@ -25,8 +26,23 @@ import {
   INITIAL_PURCHASE_ORDERS,
   INITIAL_SHIPMENTS,
 } from '../lib/initial-data';
+import {
+  INITIAL_MAINTENANCE_HISTORY,
+  INITIAL_PART_LIFESPAN_TRACKERS,
+  INITIAL_REQUISITIONS,
+  INITIAL_SPAREPARTS,
+  STANDARDIZED_MACHINES,
+} from '../lib/sparepart-data';
 import { INITIAL_HRIS_PAYROLL_DATA } from '../lib/hris-integration';
 import { HRISPayrollAllocation, PricingConfig, PurchaseOrder, PurchaseStatus } from '../lib/financial-types';
+import {
+  MachineCodeDef,
+  MaintenanceHistory,
+  PartLifespanTracker,
+  RequisitionStatus,
+  SparePart,
+  SparePartRequisition,
+} from '../lib/sparepart-types';
 import { BatchQC, InventoryItem, Machine, MachineStatus, Order, Shipment, ShipmentStatus, StockMutation } from '../lib/types';
 import { evaluateOrderDelay } from '../lib/calculations';
 
@@ -44,6 +60,13 @@ export default function HomePage() {
   const [pricing, setPricing] = useState<PricingConfig>(DEFAULT_PRICING_CONFIG);
   const [hrisPayroll, setHrisPayroll] = useState<HRISPayrollAllocation>(INITIAL_HRIS_PAYROLL_DATA);
 
+  // Sparepart & Machine Maintenance State
+  const [machinesList, setMachinesList] = useState<MachineCodeDef[]>(STANDARDIZED_MACHINES);
+  const [spareParts, setSpareParts] = useState<SparePart[]>(INITIAL_SPAREPARTS);
+  const [lifespanTrackers, setLifespanTrackers] = useState<PartLifespanTracker[]>(INITIAL_PART_LIFESPAN_TRACKERS);
+  const [maintenanceHistory, setMaintenanceHistory] = useState<MaintenanceHistory[]>(INITIAL_MAINTENANCE_HISTORY);
+  const [requisitions, setRequisitions] = useState<SparePartRequisition[]>(INITIAL_REQUISITIONS);
+
   // Modal State
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
@@ -59,6 +82,10 @@ export default function HomePage() {
   const totalCapacity = machines
     .filter((m) => m.status === 'Running')
     .reduce((sum, m) => sum + m.capacityKgPerHour, 0);
+
+  const criticalPartsCount = lifespanTrackers.filter(
+    (t) => t.wearCondition === 'OVERDUE_REPLACE' || t.wearCondition === 'WARNING'
+  ).length;
 
   // Handlers
   const handleAddOrder = (newOrder: Order) => {
@@ -286,6 +313,95 @@ export default function HomePage() {
     }));
   };
 
+  const handleAddSparepartReq = (newReq: SparePartRequisition) => {
+    setRequisitions((prev) => [newReq, ...prev]);
+  };
+
+  const handleUpdateRequisitionStatus = (reqId: string, newStatus: RequisitionStatus) => {
+    setRequisitions((prev) =>
+      prev.map((r) => (r.id === reqId ? { ...r, status: newStatus } : r))
+    );
+  };
+
+  const handleApproveAndInstallPart = (req: SparePartRequisition) => {
+    // 1. Potong stok sparepart dari gudang
+    setSpareParts((prev) =>
+      prev.map((p) =>
+        p.partCode === req.partCode
+          ? { ...p, stockQty: Math.max(0, p.stockQty - req.quantity) }
+          : p
+      )
+    );
+
+    // 2. Perbarui status tiket permintaan menjadi terpasang
+    setRequisitions((prev) =>
+      prev.map((r) =>
+        r.id === req.id
+          ? {
+              ...r,
+              status: 'Terpasang di Mesin',
+              installedDate: new Date().toISOString().split('T')[0],
+            }
+          : r
+      )
+    );
+
+    // 3. Reset tracker keausan & jam kerja part pada mesin target
+    setLifespanTrackers((prev) =>
+      prev.map((t) => {
+        if (t.machineCode === req.machineCode && t.partCode === req.partCode) {
+          return {
+            ...t,
+            currentRunningHours: 0,
+            currentThroughputTons: 0,
+            healthPercent: 100,
+            wearCondition: 'PRIMA',
+            recommendedAction: 'Komponen baru telah dipasang dan beroperasi optimal.',
+          };
+        }
+        return t;
+      })
+    );
+
+    // 4. Catat histori perawatan mesin secara otomatis
+    const newLog: MaintenanceHistory = {
+      id: `mnt-${Date.now()}`,
+      logNumber: `MNT-2026-${Math.floor(Math.random() * 900) + 100}`,
+      machineCode: req.machineCode,
+      machineName: req.machineName,
+      type: req.urgency === 'URGENT_BREAKDOWN' ? 'BREAKDOWN_REPAIR' : 'PREVENTIVE',
+      date: new Date().toISOString().split('T')[0],
+      downtimeHours: req.urgency === 'URGENT_BREAKDOWN' ? 2.5 : 1.0,
+      issueDescription: `Penggantian sparepart: ${req.reason}`,
+      actionTaken: `Pemasangan ${req.quantity} unit ${req.partName} (${req.partCode}) pada mesin ${req.machineCode}`,
+      technician: req.requestedBy,
+      replacedPartCode: req.partCode,
+      replacedPartName: req.partName,
+      replacedPartQty: req.quantity,
+      totalCost: req.estimatedCost,
+      status: 'Selesai',
+    };
+    setMaintenanceHistory((prev) => [newLog, ...prev]);
+
+    // 5. Kembalikan status mesin menjadi 'Running' jika sebelumnya dalam perbaikan/asah pisau
+    setMachines((prev) =>
+      prev.map((m) => {
+        const isTarget =
+          m.id === req.machineCode ||
+          m.name.toLowerCase().includes(req.machineName.toLowerCase()) ||
+          req.machineName.toLowerCase().includes(m.name.toLowerCase()) ||
+          (req.machineCode === 'MCH-ROT-01' && m.id === 'MS-01') ||
+          (req.machineCode === 'MCH-GUI-02' && m.id === 'MS-02') ||
+          (req.machineCode === 'MCH-SLI-03' && m.id === 'MS-03') ||
+          (req.machineCode === 'MCH-DRM-04' && m.id === 'MS-04');
+        if (isTarget) {
+          return { ...m, status: 'Running' };
+        }
+        return m;
+      })
+    );
+  };
+
   const handleResetData = () => {
     if (confirm('Muat ulang seluruh data simulasi ke setelan awal?')) {
       setOrders(INITIAL_ORDERS);
@@ -297,6 +413,11 @@ export default function HomePage() {
       setPurchaseOrders(INITIAL_PURCHASE_ORDERS);
       setPricing(DEFAULT_PRICING_CONFIG);
       setHrisPayroll(INITIAL_HRIS_PAYROLL_DATA);
+      setMachinesList(STANDARDIZED_MACHINES);
+      setSpareParts(INITIAL_SPAREPARTS);
+      setLifespanTrackers(INITIAL_PART_LIFESPAN_TRACKERS);
+      setMaintenanceHistory(INITIAL_MAINTENANCE_HISTORY);
+      setRequisitions(INITIAL_REQUISITIONS);
     }
   };
 
@@ -328,6 +449,7 @@ export default function HomePage() {
         batchCount={batches.length}
         machineCount={machines.length}
         poCount={purchaseOrders.length}
+        criticalPartsCount={criticalPartsCount}
       />
 
       {/* Main Content Area */}
@@ -398,6 +520,19 @@ export default function HomePage() {
           />
         )}
 
+        {activeTab === 'spareparts' && (
+          <SparepartModule
+            spareParts={spareParts}
+            machines={machinesList}
+            lifespanTrackers={lifespanTrackers}
+            maintenanceHistory={maintenanceHistory}
+            requisitions={requisitions}
+            onOpenAddRequisition={() => setActiveModal('add-sparepart-req')}
+            onApproveAndInstallPart={handleApproveAndInstallPart}
+            onUpdateRequisitionStatus={handleUpdateRequisitionStatus}
+          />
+        )}
+
         {activeTab === 'inventory' && (
           <InventoryModule
             inventory={inventory}
@@ -436,6 +571,9 @@ export default function HomePage() {
         onAddShipment={handleAddShipment}
         onAddPO={handleAddPO}
         selectedOrderForBatch={selectedOrderForBatch}
+        spareParts={spareParts}
+        machineCodeDefs={machinesList}
+        onAddSparepartReq={handleAddSparepartReq}
       />
 
       {/* Dynamic Pricing Configuration Modal */}

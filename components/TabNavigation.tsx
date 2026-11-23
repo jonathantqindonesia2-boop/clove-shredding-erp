@@ -11,6 +11,7 @@ import {
   TrendingUp,
   DollarSign,
   ShoppingCart,
+  Wrench,
 } from 'lucide-react';
 
 export type TabKey =
@@ -20,6 +21,7 @@ export type TabKey =
   | 'orders'
   | 'production'
   | 'machines'
+  | 'spareparts'
   | 'inventory'
   | 'shipments'
   | 'analytics';
@@ -32,6 +34,7 @@ interface TabNavigationProps {
   batchCount: number;
   machineCount: number;
   poCount: number;
+  criticalPartsCount?: number;
 }
 
 export default function TabNavigation({
@@ -42,6 +45,7 @@ export default function TabNavigation({
   batchCount,
   machineCount,
   poCount,
+  criticalPartsCount = 0,
 }: TabNavigationProps) {
   const tabs = [
     {
@@ -85,6 +89,13 @@ export default function TabNavigation({
       icon: Gauge,
       badge: delayCount > 0 ? `Alert` : `${machineCount} Unit`,
       badgeColor: delayCount > 0 ? 'bg-amber-100 text-amber-800 animate-pulse' : 'bg-slate-100 text-slate-700',
+    },
+    {
+      id: 'spareparts' as TabKey,
+      label: 'Sparepart & Maintenance',
+      icon: Wrench,
+      badge: criticalPartsCount > 0 ? `${criticalPartsCount} Kritis` : null,
+      badgeColor: 'bg-rose-100 text-rose-800 font-bold animate-pulse',
     },
     {
       id: 'inventory' as TabKey,

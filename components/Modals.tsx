@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Sparkles, ShoppingCart } from 'lucide-react';
+import { X, Sparkles, ShoppingCart, Wrench } from 'lucide-react';
 import { CutSize, InventoryItem, Machine, Order, OrderPriority, QCStatus } from '../lib/types';
 import { PurchaseOrder } from '../lib/financial-types';
+import { MachineCodeDef, RequisitionUrgency, SparePart, SparePartRequisition } from '../lib/sparepart-types';
 import { calculateYieldMetrics } from '../lib/calculations';
 
 interface ModalsProps {
@@ -19,6 +20,9 @@ interface ModalsProps {
   onAddShipment: (shipment: any) => void;
   onAddPO?: (po: PurchaseOrder) => void;
   selectedOrderForBatch?: Order | null;
+  spareParts?: SparePart[];
+  machineCodeDefs?: MachineCodeDef[];
+  onAddSparepartReq?: (req: SparePartRequisition) => void;
 }
 
 export default function Modals({
@@ -34,6 +38,9 @@ export default function Modals({
   onAddShipment,
   onAddPO,
   selectedOrderForBatch,
+  spareParts,
+  machineCodeDefs,
+  onAddSparepartReq,
 }: ModalsProps) {
   if (!activeModal) return null;
 
@@ -108,6 +115,19 @@ export default function Modals({
             onClose={onClose}
             onSubmit={(po) => {
               onAddPO(po);
+              onClose();
+            }}
+          />
+        )}
+
+        {/* Modal: Permintaan Sparepart Mesin */}
+        {activeModal === 'add-sparepart-req' && onAddSparepartReq && (
+          <AddSparepartReqForm
+            machines={machineCodeDefs || []}
+            spareParts={spareParts || []}
+            onClose={onClose}
+            onSubmit={(req) => {
+              onAddSparepartReq(req);
               onClose();
             }}
           />
@@ -1181,6 +1201,210 @@ function AddPOForm({
           className="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs"
         >
           Terbitkan &amp; Kirim ke Supplier
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// 7. FORM PERMINTAAN SPAREPART MESIN
+function AddSparepartReqForm({
+  machines,
+  spareParts,
+  onClose,
+  onSubmit,
+}: {
+  machines: MachineCodeDef[];
+  spareParts: SparePart[];
+  onClose: () => void;
+  onSubmit: (req: SparePartRequisition) => void;
+}) {
+  const [machineCode, setMachineCode] = useState(machines[0]?.code || 'MCH-ROT-01');
+  const [partCode, setPartCode] = useState(spareParts[0]?.partCode || 'PRT-CUT-BLD-01');
+  const [quantity, setQuantity] = useState(1);
+  const [requestedBy, setRequestedBy] = useState('Hendra Gunawan (Teknisi Mesin)');
+  const [urgency, setUrgency] = useState<RequisitionUrgency>('URGENT_BREAKDOWN');
+  const [reason, setReason] = useState('Penggantian mata pisau aus akibat pemotongan cengkeh padat');
+
+  const selectedMachine = machines.find((m) => m.code === machineCode);
+  const selectedPart = spareParts.find((p) => p.partCode === partCode);
+
+  const formatIDR = (num: number) => 'Rp ' + Math.round(num).toLocaleString('id-ID');
+  const estimatedCost = (selectedPart?.unitCost || 0) * Number(quantity);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newReq: SparePartRequisition = {
+      id: `req-${Date.now()}`,
+      reqNumber: `REQ-SP-2026-${Math.floor(Math.random() * 900) + 100}`,
+      machineCode: selectedMachine?.code || machineCode,
+      machineName: selectedMachine?.name || 'Mesin Perajang',
+      partCode: selectedPart?.partCode || partCode,
+      partName: selectedPart?.partName || 'Sparepart',
+      quantity: Number(quantity),
+      requestedBy,
+      urgency,
+      reason,
+      requestDate: new Date().toISOString().split('T')[0],
+      status: 'Diajukan',
+      estimatedCost,
+    };
+    onSubmit(newReq);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="p-6">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <div className="p-2 rounded-xl bg-indigo-50 text-indigo-700">
+            <Wrench className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-slate-900">Ajukan Permintaan Sparepart</h3>
+            <p className="text-xs text-slate-500">Koneksikan Kode Part dengan Target Kode Mesin Pemasangan</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="mt-4 space-y-4 text-xs">
+        {/* Target Kode Mesin */}
+        <div>
+          <label className="font-semibold text-slate-700 block mb-1">
+            Target Kode Mesin (Tempat Pemasangan):
+          </label>
+          <select
+            value={machineCode}
+            onChange={(e) => setMachineCode(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs font-semibold"
+          >
+            {machines.map((m) => (
+              <option key={m.code} value={m.code}>
+                {m.code} &mdash; {m.name} ({m.model})
+              </option>
+            ))}
+          </select>
+          {selectedMachine && (
+            <p className="mt-1 text-[11px] text-slate-500">
+              Lokasi: <span className="font-medium text-slate-700">{selectedMachine.location}</span> | Total Jam Kerja: <span className="font-medium text-slate-700">{selectedMachine.totalOperatingHours} jam</span>
+            </p>
+          )}
+        </div>
+
+        {/* Kode Sparepart */}
+        <div>
+          <label className="font-semibold text-slate-700 block mb-1">
+            Pilih Kode Part &amp; Komponen:
+          </label>
+          <select
+            value={partCode}
+            onChange={(e) => setPartCode(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs font-semibold"
+          >
+            {spareParts.map((p) => (
+              <option key={p.partCode} value={p.partCode}>
+                {p.partCode} &mdash; {p.partName} [Stok: {p.stockQty} {p.unit}]
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Info Part Detail Box */}
+        {selectedPart && (
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-[11px]">
+            <div>
+              <span className="text-slate-400 block">Stok Tersedia di Gudang</span>
+              <span className={`font-bold ${selectedPart.stockQty <= selectedPart.minBuffer ? 'text-rose-600' : 'text-emerald-600'}`}>
+                {selectedPart.stockQty} {selectedPart.unit} (Buffer Min: {selectedPart.minBuffer})
+              </span>
+            </div>
+            <div>
+              <span className="text-slate-400 block">Lokasi Bin Gudang</span>
+              <span className="font-semibold text-slate-800">{selectedPart.storageBin}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 block">Harga Satuan</span>
+              <span className="font-semibold text-slate-800">{formatIDR(selectedPart.unitCost)}</span>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">Jumlah Diperlukan:</label>
+            <input
+              type="number"
+              min={1}
+              max={selectedPart?.stockQty || 99}
+              value={quantity}
+              onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 font-semibold"
+            />
+          </div>
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">Tingkat Urgensi:</label>
+            <select
+              value={urgency}
+              onChange={(e) => setUrgency(e.target.value as RequisitionUrgency)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 font-semibold"
+            >
+              <option value="URGENT_BREAKDOWN">🚨 Urgent Breakdown (Mesin Berhenti)</option>
+              <option value="PREVENTIVE">⏱️ Preventive Maintenance (Terjadwal)</option>
+              <option value="NORMAL">📦 Normal Buffer (Cadangan Reguler)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="font-semibold text-slate-700 block mb-1">Teknisi Pengaju:</label>
+          <input
+            type="text"
+            value={requestedBy}
+            onChange={(e) => setRequestedBy(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-slate-300"
+            placeholder="Nama teknisi / regu maintenance"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="font-semibold text-slate-700 block mb-1">Alasan Permintaan / Gejala Kerusakan:</label>
+          <textarea
+            rows={2}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-slate-300"
+            placeholder="Deskripsikan kondisi sparepart aus atau gejala kegagalan mekanik..."
+            required
+          />
+        </div>
+
+        {/* Cost Summary */}
+        <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between">
+          <span className="text-indigo-900 font-semibold">Total Estimasi Biaya Penggantian:</span>
+          <span className="text-sm font-bold text-indigo-700">{formatIDR(estimatedCost)}</span>
+        </div>
+      </div>
+
+      <div className="mt-6 flex justify-end gap-2 pt-3 border-t border-slate-100">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+        >
+          Batal
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-xs"
+        >
+          Kirim Tiket Permintaan
         </button>
       </div>
     </form>

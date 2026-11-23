@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Factory, Plus, RefreshCw, ShoppingCart, Sliders, Sparkles } from 'lucide-react';
+import { Factory, Plus, RefreshCw, ShoppingCart, Sliders, Sparkles, Wrench } from 'lucide-react';
 
 interface NavbarProps {
   totalCapacity: number;
@@ -74,6 +74,16 @@ export default function Navbar({
           >
             <ShoppingCart className="h-3.5 w-3.5 text-teal-600" />
             <span>+ Beli Bahan</span>
+          </button>
+
+          {/* Minta Sparepart Button */}
+          <button
+            onClick={() => onOpenModal('add-sparepart-req')}
+            className="inline-flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 text-xs font-semibold px-3 py-2 rounded-xl transition shadow-xs active:scale-95"
+            title="Ajukan Permintaan Sparepart Mesin"
+          >
+            <Wrench className="h-3.5 w-3.5 text-indigo-600" />
+            <span>+ Minta Part</span>
           </button>
 
           {/* Terima Order Button */}
