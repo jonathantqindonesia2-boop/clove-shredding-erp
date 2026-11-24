@@ -61,6 +61,17 @@
 - Inventori 4 kategori komoditas pabrik dengan mutasi stok masuk/keluar terverifikasi.
 - Penerbitan Surat Jalan (*Delivery Order* / DO) dengan nomor plat truk, driver, dan status live tracking.
 
+### 7. Pengelolaan Hak Akses Pengguna (RBAC) & Audit Log Keamanan (*Super Admin Suite*)
+- **Matriks Hak Akses Granular per Modul:**
+  - Pengaturan izin dinamis oleh Super Admin untuk setiap modul (Dashboard, Order, QC Produksi, Mesin, Sparepart, Stok Gudang, Pengiriman, Pengadaan MRP, Laporan Keuangan, Analitik, dan Akses Pengguna).
+  - Standarisasi 8 Role Otoritas: `SUPER_ADMIN`, `DIREKSI`, `PLANT_MANAGER`, `QC_SUPERVISOR`, `WAREHOUSE_LEAD`, `MAINTENANCE_LEAD`, `PURCHASING_OFFICER`, dan `FINANCE_ACCOUNTING`.
+  - Live Toggle izin modul langsung pada tabel matriks per pengguna tanpa perlu me-reload aplikasi.
+  - Penegakan aturan akses (*Role Enforcement*): Tab modul yang tidak diizinkan disembunyikan secara otomatis; jika diakses paksa, sistem menampilkan kartu blokir akses *Access Denied* dan mencatatnya ke audit trail.
+- **Pencatatan Audit Log Lengkap (Log In & Log Out):**
+  - Merekam setiap sesi otentikasi: Waktu & Tanggal, User ID, Username, Nama, Role, Aksi (`LOGIN`, `LOGOUT`, `ACCESS_DENIED`, `PERMISSION_CHANGED`, `USER_CREATED`, `STATUS_CHANGED`), Alamat IP, dan Perangkat/Browser.
+  - Filter pencarian cepat berdasarkan pengguna, aktivitas, status, dan tombol ekspor riwayat audit ke format CSV.
+  - Fitur *User Switcher* / Beralih Akun instan di header Navbar untuk mempermudah audit dan pengujian hak akses antar departemen.
+
 ---
 
 ## 🚀 Menjalankan Secara Lokal

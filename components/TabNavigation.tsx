@@ -12,6 +12,7 @@ import {
   DollarSign,
   ShoppingCart,
   Wrench,
+  ShieldCheck,
 } from 'lucide-react';
 
 export type TabKey =
@@ -24,7 +25,8 @@ export type TabKey =
   | 'spareparts'
   | 'inventory'
   | 'shipments'
-  | 'analytics';
+  | 'analytics'
+  | 'users';
 
 interface TabNavigationProps {
   activeTab: TabKey;
@@ -35,6 +37,7 @@ interface TabNavigationProps {
   machineCount: number;
   poCount: number;
   criticalPartsCount?: number;
+  allowedModules?: TabKey[];
 }
 
 export default function TabNavigation({
@@ -46,8 +49,9 @@ export default function TabNavigation({
   machineCount,
   poCount,
   criticalPartsCount = 0,
+  allowedModules,
 }: TabNavigationProps) {
-  const tabs = [
+  const allTabs = [
     {
       id: 'dashboard' as TabKey,
       label: 'Dashboard Eksekutif',
@@ -118,7 +122,19 @@ export default function TabNavigation({
       badge: null,
       badgeColor: '',
     },
+    {
+      id: 'users' as TabKey,
+      label: 'Akses & Audit Log',
+      icon: ShieldCheck,
+      badge: 'RBAC',
+      badgeColor: 'bg-purple-100 text-purple-800 font-bold',
+    },
   ];
+
+  // Filter tabs according to current user's permitted modules
+  const tabs = allowedModules && allowedModules.length > 0
+    ? allTabs.filter((t) => allowedModules.includes(t.id))
+    : allTabs;
 
   return (
     <div className="border-b border-slate-200 bg-white">

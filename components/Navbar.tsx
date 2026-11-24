@@ -1,22 +1,42 @@
 'use client';
 
 import React from 'react';
-import { Factory, Plus, RefreshCw, ShoppingCart, Sliders, Sparkles, Wrench } from 'lucide-react';
+import {
+  Factory,
+  LogOut,
+  Plus,
+  RefreshCw,
+  Shield,
+  ShieldCheck,
+  ShoppingCart,
+  Sliders,
+  Sparkles,
+  UserCheck,
+  Users,
+  Wrench,
+} from 'lucide-react';
+import { AppUser } from '../lib/auth-types';
 
 interface NavbarProps {
   totalCapacity: number;
   activeOrdersCount: number;
+  currentUser?: AppUser;
   onOpenModal: (modalName: string) => void;
   onOpenPricingModal: () => void;
   onResetData: () => void;
+  onOpenLoginModal?: () => void;
+  onLogout?: () => void;
 }
 
 export default function Navbar({
   totalCapacity,
   activeOrdersCount,
+  currentUser,
   onOpenModal,
   onOpenPricingModal,
   onResetData,
+  onOpenLoginModal,
+  onLogout,
 }: NavbarProps) {
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
@@ -103,6 +123,41 @@ export default function Navbar({
             <Sparkles className="h-4 w-4" />
             <span>Input QC</span>
           </button>
+
+          {/* User Profile & Auth Session */}
+          {currentUser && (
+            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-200">
+              <button
+                onClick={onOpenLoginModal}
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-purple-50 hover:border-purple-300 transition text-left group"
+                title="Beralih Akun Pengguna / Switch User"
+              >
+                <div
+                  className={`h-7 w-7 rounded-full ${currentUser.avatarBg} text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs`}
+                >
+                  {currentUser.avatarText}
+                </div>
+                <div className="hidden sm:block">
+                  <div className="font-bold text-[11px] text-slate-900 group-hover:text-purple-700 leading-tight">
+                    {currentUser.name.split(' ')[0]}
+                  </div>
+                  <div className="text-[10px] text-purple-700 font-semibold leading-tight">
+                    {currentUser.roleLabel.split('/')[0].trim()}
+                  </div>
+                </div>
+              </button>
+
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                  title="Log Out dari Sistem"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          )}
 
           <button
             onClick={onResetData}

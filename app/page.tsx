@@ -15,6 +15,11 @@ import ProcurementModule from '../components/ProcurementModule';
 import SparepartModule from '../components/SparepartModule';
 import PricingModal from '../components/PricingModal';
 import Modals from '../components/Modals';
+import UserAccessModule from '../components/UserAccessModule';
+import LoginModal from '../components/LoginModal';
+import { ShieldAlert } from 'lucide-react';
+import { AppUser, AuditLogEntry, UserStatus } from '../lib/auth-types';
+import { INITIAL_USERS, INITIAL_AUDIT_LOGS } from '../lib/auth-data';
 
 import {
   DEFAULT_PRICING_CONFIG,
@@ -69,6 +74,12 @@ export default function HomePage() {
   const [maintenanceHistory, setMaintenanceHistory] = useState<MaintenanceHistory[]>(INITIAL_MAINTENANCE_HISTORY);
   const [requisitions, setRequisitions] = useState<SparePartRequisition[]>(INITIAL_REQUISITIONS);
   const [sparePartMutations, setSparePartMutations] = useState<SparePartStockMutation[]>(INITIAL_SPAREPART_MUTATIONS);
+
+  // User Access & RBAC Security State
+  const [users, setUsers] = useState<AppUser[]>(INITIAL_USERS);
+  const [currentUser, setCurrentUser] = useState<AppUser>(INITIAL_USERS[0]); // default Super Admin
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOGS);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   // Modal State
   const [activeModal, setActiveModal] = useState<string | null>(null);
@@ -503,18 +514,117 @@ export default function HomePage() {
     setActiveModal('add-batch');
   };
 
+  // RBAC & User Management Handlers
+  const handleUpdateUserModules = (userId: string, newModules: TabKey[]) => {
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, allowedModules: newModules } : u))
+    );
+    if (currentUser.id === userId) {
+      setCurrentUser((prev) => ({ ...prev, allowedModules: newModules }));
+    }
+  };
+
+  const handleUpdateUserStatus = (userId: string, newStatus: UserStatus) => {
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, status: newStatus } : u))
+    );
+    if (currentUser.id === userId) {
+      setCurrentUser((prev) => ({ ...prev, status: newStatus }));
+    }
+  };
+
+  const handleAddUser = (newUserData: Omit<AppUser, 'id' | 'createdAt' | 'lastLoginAt' | 'lastLoginIp'>) => {
+    const newId = `USR-${String(users.length + 1).padStart(3, '0')}`;
+    const newUser: AppUser = {
+      ...newUserData,
+      id: newId,
+      lastLoginAt: '-',
+      lastLoginIp: '-',
+      createdAt: new Date().toISOString().slice(0, 10),
+    };
+    setUsers((prev) => [...prev, newUser]);
+  };
+
+  const handleAddAuditLog = (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => {
+    const now = new Date();
+    const formattedTime = `${now.toISOString().slice(0, 10)} ${now.toTimeString().slice(0, 8)}`;
+    const newLog: AuditLogEntry = {
+      ...entry,
+      id: `LOG-${now.toISOString().slice(0, 10).replace(/-/g, '')}-${String(auditLogs.length + 1).padStart(4, '0')}`,
+      timestamp: formattedTime,
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+  };
+
+  const handleSelectLoginUser = (user: AppUser) => {
+    const now = new Date();
+    const formattedTime = `${now.toISOString().slice(0, 10)} ${now.toTimeString().slice(0, 8)}`;
+
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === user.id
+          ? { ...u, lastLoginAt: formattedTime, lastLoginIp: '192.168.1.10 (Simulasi Sesi)' }
+          : u
+      )
+    );
+
+    setCurrentUser({
+      ...user,
+      lastLoginAt: formattedTime,
+      lastLoginIp: '192.168.1.10 (Simulasi Sesi)',
+    });
+
+    handleAddAuditLog({
+      userId: user.id,
+      username: user.username,
+      name: user.name,
+      role: user.role,
+      roleLabel: user.roleLabel,
+      action: 'LOGIN',
+      status: 'SUCCESS',
+      ipAddress: '192.168.1.10',
+      device: 'Chrome 131 / Windows 11',
+      details: `Pengguna ${user.name} (@${user.username}) berhasil melakukan autentikasi login sesi.`,
+    });
+
+    if (!user.allowedModules.includes(activeTab)) {
+      setActiveTab(user.allowedModules[0] || 'dashboard');
+    }
+  };
+
+  const handleLogout = () => {
+    handleAddAuditLog({
+      userId: currentUser.id,
+      username: currentUser.username,
+      name: currentUser.name,
+      role: currentUser.role,
+      roleLabel: currentUser.roleLabel,
+      action: 'LOGOUT',
+      status: 'SUCCESS',
+      ipAddress: '192.168.1.10',
+      device: 'Chrome 131 / Windows 11',
+      details: `Pengguna ${currentUser.name} (@${currentUser.username}) melakukan log out dari sistem.`,
+    });
+    setIsLoginModalOpen(true);
+  };
+
+  const isCurrentTabPermitted = currentUser.allowedModules.includes(activeTab);
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       {/* Top Header */}
       <Navbar
         totalCapacity={totalCapacity}
         activeOrdersCount={activeOrders.length}
+        currentUser={currentUser}
         onOpenModal={(modal) => {
           setSelectedOrderForBatch(null);
           setActiveModal(modal);
         }}
         onOpenPricingModal={() => setIsPricingModalOpen(true)}
         onResetData={handleResetData}
+        onOpenLoginModal={() => setIsLoginModalOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Tabs Navigation */}
@@ -527,112 +637,157 @@ export default function HomePage() {
         machineCount={machines.length}
         poCount={purchaseOrders.length}
         criticalPartsCount={criticalPartsCount}
+        allowedModules={currentUser.allowedModules}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {activeTab === 'dashboard' && (
-          <DashboardOverview
-            orders={orders}
-            machines={machines}
-            batches={batches}
-            shipments={shipments}
-            onSelectTab={setActiveTab}
-            onOpenModal={setActiveModal}
-          />
-        )}
+        {!isCurrentTabPermitted ? (
+          <div className="bg-white border border-rose-200 rounded-3xl p-8 sm:p-12 text-center shadow-xs max-w-2xl mx-auto my-12 space-y-4 animate-fade-in">
+            <div className="h-16 w-16 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-inner">
+              <ShieldAlert className="h-8 w-8" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">Akses Modul Terbatas (RBAC Restricted)</h3>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Akun Anda (<strong>{currentUser.name}</strong> dengan role <strong>{currentUser.roleLabel}</strong>) tidak memiliki izin otoritas untuk mengakses modul <strong>{activeTab.toUpperCase()}</strong>.
+            </p>
+            <p className="text-xs text-slate-400">
+              Silakan hubungi <strong>Super Administrator</strong> atau beralih ke modul yang diizinkan untuk akun Anda.
+            </p>
+            <div className="pt-3 flex flex-wrap items-center justify-center gap-3">
+              <button
+                onClick={() => setActiveTab(currentUser.allowedModules[0] || 'dashboard')}
+                className="px-4 py-2.5 text-xs font-semibold rounded-xl bg-purple-600 text-white hover:bg-purple-500 transition shadow-sm active:scale-95"
+              >
+                Buka Modul yang Diizinkan
+              </button>
+              <button
+                onClick={() => setIsLoginModalOpen(true)}
+                className="px-4 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 transition active:scale-95"
+              >
+                Ganti Akun Pengguna
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {activeTab === 'dashboard' && (
+              <DashboardOverview
+                orders={orders}
+                machines={machines}
+                batches={batches}
+                shipments={shipments}
+                onSelectTab={setActiveTab}
+                onOpenModal={setActiveModal}
+              />
+            )}
 
-        {activeTab === 'procurement' && (
-          <ProcurementModule
-            purchaseOrders={purchaseOrders}
-            customerOrders={orders}
-            inventory={inventory}
-            onOpenAddPO={() => setActiveModal('add-po')}
-            onUpdatePOStatus={handleUpdatePOStatus}
-            onReceiveGoods={handleReceiveGoods}
-          />
-        )}
+            {activeTab === 'procurement' && (
+              <ProcurementModule
+                purchaseOrders={purchaseOrders}
+                customerOrders={orders}
+                inventory={inventory}
+                onOpenAddPO={() => setActiveModal('add-po')}
+                onUpdatePOStatus={handleUpdatePOStatus}
+                onReceiveGoods={handleReceiveGoods}
+              />
+            )}
 
-        {activeTab === 'finance' && (
-          <FinancialModule
-            orders={orders}
-            batches={batches}
-            inventory={inventory}
-            shipments={shipments}
-            hrisPayroll={hrisPayroll}
-            pricing={pricing}
-            purchaseOrders={purchaseOrders}
-            spareParts={spareParts}
-            sparePartMutations={sparePartMutations}
-            machines={machines}
-            onSyncHRIS={handleSyncHRIS}
-            onOpenPricingModal={() => setIsPricingModalOpen(true)}
-          />
-        )}
+            {activeTab === 'finance' && (
+              <FinancialModule
+                orders={orders}
+                batches={batches}
+                inventory={inventory}
+                shipments={shipments}
+                hrisPayroll={hrisPayroll}
+                pricing={pricing}
+                purchaseOrders={purchaseOrders}
+                spareParts={spareParts}
+                sparePartMutations={sparePartMutations}
+                machines={machines}
+                onSyncHRIS={handleSyncHRIS}
+                onOpenPricingModal={() => setIsPricingModalOpen(true)}
+              />
+            )}
 
-        {activeTab === 'orders' && (
-          <OrdersModule
-            orders={orders}
-            machines={machines}
-            onOpenAddOrder={() => setActiveModal('add-order')}
-            onOpenAddBatchForOrder={handleOpenAddBatchForOrder}
-            onUpdateOrderStatus={handleUpdateOrderStatus}
-          />
-        )}
+            {activeTab === 'orders' && (
+              <OrdersModule
+                orders={orders}
+                machines={machines}
+                onOpenAddOrder={() => setActiveModal('add-order')}
+                onOpenAddBatchForOrder={handleOpenAddBatchForOrder}
+                onUpdateOrderStatus={handleUpdateOrderStatus}
+              />
+            )}
 
-        {activeTab === 'production' && (
-          <ProductionQCModule
-            batches={batches}
-            onOpenAddBatch={() => {
-              setSelectedOrderForBatch(null);
-              setActiveModal('add-batch');
-            }}
-          />
-        )}
+            {activeTab === 'production' && (
+              <ProductionQCModule
+                batches={batches}
+                onOpenAddBatch={() => {
+                  setSelectedOrderForBatch(null);
+                  setActiveModal('add-batch');
+                }}
+              />
+            )}
 
-        {activeTab === 'machines' && (
-          <MachinesCapacityModule
-            machines={machines}
-            orders={orders}
-            onUpdateMachineCapacity={handleUpdateMachineCapacity}
-            onUpdateMachineStatus={handleUpdateMachineStatus}
-            onOpenAddMachine={() => setActiveModal('add-machine')}
-          />
-        )}
+            {activeTab === 'machines' && (
+              <MachinesCapacityModule
+                machines={machines}
+                orders={orders}
+                onUpdateMachineCapacity={handleUpdateMachineCapacity}
+                onUpdateMachineStatus={handleUpdateMachineStatus}
+                onOpenAddMachine={() => setActiveModal('add-machine')}
+              />
+            )}
 
-        {activeTab === 'spareparts' && (
-          <SparepartModule
-            spareParts={spareParts}
-            machines={machinesList}
-            lifespanTrackers={lifespanTrackers}
-            maintenanceHistory={maintenanceHistory}
-            requisitions={requisitions}
-            mutations={sparePartMutations}
-            onOpenAddRequisition={() => setActiveModal('add-sparepart-req')}
-            onOpenAddStockIn={() => setActiveModal('add-sparepart-stockin')}
-            onApproveAndInstallPart={handleApproveAndInstallPart}
-            onUpdateRequisitionStatus={handleUpdateRequisitionStatus}
-          />
-        )}
+            {activeTab === 'spareparts' && (
+              <SparepartModule
+                spareParts={spareParts}
+                machines={machinesList}
+                lifespanTrackers={lifespanTrackers}
+                maintenanceHistory={maintenanceHistory}
+                requisitions={requisitions}
+                mutations={sparePartMutations}
+                onOpenAddRequisition={() => setActiveModal('add-sparepart-req')}
+                onOpenAddStockIn={() => setActiveModal('add-sparepart-stockin')}
+                onApproveAndInstallPart={handleApproveAndInstallPart}
+                onUpdateRequisitionStatus={handleUpdateRequisitionStatus}
+              />
+            )}
 
-        {activeTab === 'inventory' && (
-          <InventoryModule
-            inventory={inventory}
-            mutations={mutations}
-            onOpenAddMutation={() => setActiveModal('add-mutation')}
-          />
-        )}
+            {activeTab === 'inventory' && (
+              <InventoryModule
+                inventory={inventory}
+                mutations={mutations}
+                onOpenAddMutation={() => setActiveModal('add-mutation')}
+              />
+            )}
 
-        {activeTab === 'shipments' && (
-          <ShipmentModule
-            shipments={shipments}
-            onOpenAddShipment={() => setActiveModal('add-shipment')}
-            onUpdateShipmentStatus={handleUpdateShipmentStatus}
-          />
-        )}
+            {activeTab === 'shipments' && (
+              <ShipmentModule
+                shipments={shipments}
+                onOpenAddShipment={() => setActiveModal('add-shipment')}
+                onUpdateShipmentStatus={handleUpdateShipmentStatus}
+              />
+            )}
 
-        {activeTab === 'analytics' && (
-          <DeepDiveAnalytics batches={batches} machines={machines} orders={orders} />
+            {activeTab === 'analytics' && (
+              <DeepDiveAnalytics batches={batches} machines={machines} orders={orders} />
+            )}
+
+            {activeTab === 'users' && (
+              <UserAccessModule
+                currentUser={currentUser}
+                users={users}
+                auditLogs={auditLogs}
+                onUpdateUserModules={handleUpdateUserModules}
+                onUpdateUserStatus={handleUpdateUserStatus}
+                onAddUser={handleAddUser}
+                onSwitchUser={handleSelectLoginUser}
+                onAddAuditLog={handleAddAuditLog}
+              />
+            )}
+          </>
         )}
       </main>
 
@@ -665,6 +820,15 @@ export default function HomePage() {
         onClose={() => setIsPricingModalOpen(false)}
         pricing={pricing}
         onSavePricing={setPricing}
+      />
+
+      {/* User Login & Switcher Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        users={users}
+        currentUser={currentUser}
+        onSelectLoginUser={handleSelectLoginUser}
       />
 
       {/* Footer */}
