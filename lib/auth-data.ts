@@ -13,6 +13,7 @@ export const ROLE_DEFAULT_MODULES: Record<UserRole, TabKey[]> = {
     'inventory',
     'shipments',
     'analytics',
+    'ims',
     'users',
   ],
   DIREKSI: [
@@ -22,6 +23,7 @@ export const ROLE_DEFAULT_MODULES: Record<UserRole, TabKey[]> = {
     'analytics',
     'orders',
     'shipments',
+    'ims',
     'users',
   ],
   PLANT_MANAGER: [
@@ -33,6 +35,7 @@ export const ROLE_DEFAULT_MODULES: Record<UserRole, TabKey[]> = {
     'inventory',
     'shipments',
     'analytics',
+    'ims',
   ],
   QC_SUPERVISOR: [
     'dashboard',
@@ -40,6 +43,7 @@ export const ROLE_DEFAULT_MODULES: Record<UserRole, TabKey[]> = {
     'orders',
     'machines',
     'analytics',
+    'ims',
   ],
   WAREHOUSE_LEAD: [
     'dashboard',
@@ -53,6 +57,7 @@ export const ROLE_DEFAULT_MODULES: Record<UserRole, TabKey[]> = {
     'spareparts',
     'production',
     'dashboard',
+    'ims',
   ],
   PURCHASING_OFFICER: [
     'procurement',
@@ -92,6 +97,7 @@ export const INITIAL_USERS: AppUser[] = [
       'inventory',
       'shipments',
       'analytics',
+      'ims',
       'users',
     ],
     lastLoginAt: '2026-11-24 11:25:10',
@@ -116,6 +122,7 @@ export const INITIAL_USERS: AppUser[] = [
       'analytics',
       'orders',
       'shipments',
+      'ims',
       'users',
     ],
     lastLoginAt: '2026-11-24 09:12:44',
@@ -142,6 +149,7 @@ export const INITIAL_USERS: AppUser[] = [
       'inventory',
       'shipments',
       'analytics',
+      'ims',
     ],
     lastLoginAt: '2026-11-24 07:45:18',
     lastLoginIp: '192.168.1.88 (Plant Floor Control)',
@@ -164,6 +172,7 @@ export const INITIAL_USERS: AppUser[] = [
       'orders',
       'machines',
       'analytics',
+      'ims',
     ],
     lastLoginAt: '2026-11-24 08:05:32',
     lastLoginIp: '192.168.2.14 (QC Laboratory)',

@@ -13,6 +13,7 @@ import {
   ShoppingCart,
   Wrench,
   ShieldCheck,
+  Orbit,
 } from 'lucide-react';
 
 export type TabKey =
@@ -26,6 +27,7 @@ export type TabKey =
   | 'inventory'
   | 'shipments'
   | 'analytics'
+  | 'ims'
   | 'users';
 
 interface TabNavigationProps {
@@ -121,6 +123,13 @@ export default function TabNavigation({
       icon: TrendingUp,
       badge: null,
       badgeColor: '',
+    },
+    {
+      id: 'ims' as TabKey,
+      label: 'Manajemen Mutu (IMS 360°)',
+      icon: Orbit,
+      badge: 'ISO 9001',
+      badgeColor: 'bg-blue-100 text-blue-800 font-bold',
     },
     {
       id: 'users' as TabKey,

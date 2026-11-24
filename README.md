@@ -72,6 +72,16 @@
   - Filter pencarian cepat berdasarkan pengguna, aktivitas, status, dan tombol ekspor riwayat audit ke format CSV.
   - Fitur *User Switcher* / Beralih Akun instan di header Navbar untuk mempermudah audit dan pengujian hak akses antar departemen.
 
+### 8. Sistem Manajemen Mutu Terintegrasi (*IMS 360° / ISO 9001:2026 - TQ-IMS*)
+- **Konsolidasi Klausul 4 s/d 10 Terpadu:**
+  - **IMS 360° Hub:** Health score sistem mutu pabrik (94.2% Grade A), radar 4 pilar PDCA (Plan, Do, Check, Act), status kepatuhan klausul ISO 9001:2026, dan daftar prioritas tindakan mutu mingguan.
+  - **Klausul 4 (Konteks & Stakeholder):** Analisis PESTEL 6 dimensi agrobisnis cengkeh dan portal ekspektasi pemangku kepentingan (Gudang Garam, Sampoerna, Djarum, Wismilak, kelompok tani cengkeh binaan, dan Disnaker).
+  - **Klausul 5 & 9.3 (Kebijakan Mutu & RTM):** Komitmen kebijakan mutu digital yang disahkan Direktur Utama dan agenda Rapat Tinjauan Manajemen berkala.
+  - **Klausul 6 (Manajemen Risiko & OKR):** Risk Register interaktif dengan matriks Likelihood x Impact 5x5, evaluasi residual risk, dan sasaran mutu berbasis OKR (Rendemen prima $\ge 90\%$, debu $\le 6\%$, zero delay, zero kecelakaan kerja).
+  - **Klausul 7 (Kompetensi & E-Document):** Digital Skill Matrix 4 level per karyawan (operator mesin rotary, teknisi asah pisau, analis lab QC) dan sistem EDMS untuk pengendalian SOP, Instruksi Kerja (IK), dan Manual Mutu.
+  - **Klausul 9 (Audit & Kepuasan Pelanggan):** Pencatatan audit mutu internal (Major, Minor, OFI) dan survei kepuasan pelanggan pabrik rokok (CSAT rata-rata 4.85/5.0).
+  - **Klausul 10 (CAPA Digital 6M):** Alur investigasi tindakan korektif dan pencegahan terintegrasi langsung dengan log QC batch dan maintenance mesin; dilengkapi metode 6M (*Man, Machine, Method, Material, Measurement, Milieu*) dan analisis 5-Why.
+
 ---
 
 ## 🚀 Menjalankan Secara Lokal

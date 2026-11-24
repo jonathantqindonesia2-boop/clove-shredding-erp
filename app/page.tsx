@@ -17,6 +17,7 @@ import PricingModal from '../components/PricingModal';
 import Modals from '../components/Modals';
 import UserAccessModule from '../components/UserAccessModule';
 import LoginModal from '../components/LoginModal';
+import ImsModule from '../components/ImsModule';
 import { ShieldAlert } from 'lucide-react';
 import { AppUser, AuditLogEntry, UserStatus } from '../lib/auth-types';
 import { INITIAL_USERS, INITIAL_AUDIT_LOGS } from '../lib/auth-data';
@@ -773,6 +774,10 @@ export default function HomePage() {
 
             {activeTab === 'analytics' && (
               <DeepDiveAnalytics batches={batches} machines={machines} orders={orders} />
+            )}
+
+            {activeTab === 'ims' && (
+              <ImsModule />
             )}
 
             {activeTab === 'users' && (

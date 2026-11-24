@@ -135,6 +135,13 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
     colorBadge: 'bg-violet-50 text-violet-700 border-violet-200',
   },
   {
+    id: 'ims',
+    label: 'Manajemen Mutu (IMS 360°)',
+    description: 'Sistem Manajemen Mutu Terintegrasi ISO 9001:2026: PESTEL, Risk Register 5x5, OKR, Skill Matrix, EDMS, E-Audit, dan CAPA 6M.',
+    category: 'Eksekutif',
+    colorBadge: 'bg-blue-50 text-blue-700 border-blue-200',
+  },
+  {
     id: 'users',
     label: 'Akses Pengguna & Audit Log',
     description: 'Pengelolaan matriks hak akses pengguna per modul oleh Super Admin dan audit trail log in / log out.',
