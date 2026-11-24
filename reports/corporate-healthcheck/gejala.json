@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "perusahaan": "PT Industri Rajang Cengkeh Prima",
+    "mata_uang": "IDR",
+    "satuan": "juta",
+    "periode": [
+      "2025",
+      "2026"
+    ],
+    "hari_periode": {
+      "2025": 365.0,
+      "2026": 365.0
+    },
+    "metode": "Saldo neraca akhir periode (bukan rata-rata). Laba disetahunkan bila periode < 365 hari.",
+    "metode_kode": "akhir",
+    "sumber": "Sistem ERP Terpadu Perajangan Cengkeh (CloveERP)",
+    "skrip": "deteksi_gejala.py v1.0.0",
+    "gaya": "ringkas"
+  },
+  "ringkasan": {
+    "tambahan_modal_kerja": {
+      "keterangan": "Tambahan dana tertahan di piutang + persediaan - utang usaha",
+      "nilai": 255.0,
+      "satuan": "juta Rupiah"
+    },
+    "cash_conversion_cycle": {
+      "dari": 51.0,
+      "ke": 49.8
+    }
+  },
+  "temuan": []
+}

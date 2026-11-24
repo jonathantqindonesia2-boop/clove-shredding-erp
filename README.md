@@ -7,22 +7,31 @@
 
 ## 🌟 Modul & Fitur Terintegrasi
 
-### 1. Sistem Laporan Keuangan & Akuntansi Manufaktur (*Financial & Cost Suite*)
+### 1. Sistem Laporan Keuangan, Akuntansi Manufaktur & Corporate Health Check
 - **Laporan Laba Rugi Komprehensif (*Income Statement / P&L*):**
   - Penjualan Cengkeh Rajang Prima ke pabrikan rokok (0.4mm, 0.6mm, 0.8mm, 1.0mm).
   - Penjualan Byproduct: Debu Siklon (industri dupa) dan Gagang Cengkeh (minyak atsiri).
   - Harga Pokok Penjualan (HPP / COGS) mencakup bahan baku, upah tenaga kerja langsung dari HRIS, dan overhead pabrik (listrik, asah pisau, kemasan, depresiasi).
   - EBITDA, Beban Logistik Armada Truk, Beban Gaji Manajemen, Pajak PPh Badan (22%), dan Laba Bersih (*Net Income*).
 - **Neraca Keuangan (*Balance Sheet*):**
-  - Aktiva Lancar (Kas Bank, Piutang Usaha Klien, Persediaan Bahan Mentah, Rajang Prima, Debu & Gagang).
+  - Aktiva Lancar (Kas Bank, Piutang Usaha Klien, Persediaan Bahan Mentah, Rajang Prima, Debu & Gagang, Persediaan Sparepart).
   - Aktiva Tetap (Mesin Perajang Rotary/Guillotine, Truk Box, Akumulasi Penyusutan).
   - Kewajiban (Hutang Petani Cengkeh, Akrual Gaji HRIS, Hutang Pajak).
   - Ekuitas (Modal Disetor, Laba Ditahan, Laba Tahun Berjalan) dengan validasi keseimbangan otomatis (*Assets = Liabilities + Equity*).
-- **Analisis HPP & Unit Economics (Cost per Kg):**
-  - Rincian biaya per 1 kg rajangan cengkeh bersih: Bahan Baku (77%), Upah Operator HRIS (11%), Listrik & Pisau (6%), Kemasan & Logistik (6%).
-  - Spread margin keuntungan per kg (+Rp 27.000 / kg) dan persentase margin kotor.
-- **Buku Besar & Jurnal Otomatis (*Double-Entry General Ledger*):**
-  - Jurnal akuntansi otomatis terposting seketika terjadi batch pengerjaan, penerbitan Surat Jalan pengiriman, mutasi stok gudang, dan sinkronisasi penggajian HRIS.
+- **Corporate Health Check & Board Reporting (Integrasi `corporate-health-check` TQ Board Insight):**
+  - **Skor Kesehatan Altman Z'' (Emerging Markets):** $Z'' = 6.56 X_1 + 3.26 X_2 + 6.72 X_3 + 1.05 X_4$ (Safe Zone $>2.60$, Grey Zone $1.10 - 2.60$, Distress Zone $<1.10$).
+  - **Dekomposisi DuPont 3-Tahap:** $\text{ROE} = \text{Net Profit Margin} \times \text{Asset Turnover} \times \text{Equity Multiplier}$.
+  - **28 Rasio Finansial Deterministik:** Likuiditas (Current, Quick, Cash Ratio), Profitabilitas (GPM, OPM, EBITDA, NPM, ROA, ROE), Solvabilitas (DER, Debt-to-Assets, Net Debt/EBITDA), Efisiensi Siklus Kas (DIO, DSO, DPO, CCC), dan Kualitas Kas (CFO/Net Income, FCF Margin, Capex/Depr).
+  - **Uji Ketahanan Kas 5 Skenario (Cash Stress Test):** Penjualan $-15\%$, Kenaikan Harga Bahan $+10\%$, Keterlambatan Piutang $+30$ hari, Percepatan Pembayaran Pemasok $-15$ hari, dan Resesi Gabungan; dilengkapi kalkulasi arus kas bulanan dan runway kas.
+  - **Benchmark Emiten Tbk Industri Rokok & Tembakau IDX:** Komparasi langsung dengan PT Gudang Garam Tbk (`GGRM`), PT HM Sampoerna Tbk (`HMSP`), dan PT Wismilak Inti Makmur Tbk (`WIIM`).
+  - **Pemetaan Red Flag Operasional Pabrik:** Gejala Finansial $\rightarrow$ Kemungkinan Akar Masalah Mesin/Operasional $\rightarrow$ Data Pembukti ERP $\rightarrow$ Pertanyaan Agenda Rapat Direksi & CFO.
+  - **Ekspor Format Standar `lk.json` & Bridge CLI Python:** Skrip `scripts/healthcheck_bridge.py` untuk mengotomatisasi generasi board brief HTML/Markdown 1-halaman.
+
+### 2. Modul Gudang Sparepart, Umur Part & CMMS Mesin (*Sparepart Lifespan & Maintenance*)
+- Standarisasi Koding Mesin (`MSN-RC-01` s/d `MSN-PK-02`) dan Koding Komponen Part (`PRT-BLD-01`, `PRT-BRG-01`, `PRT-BLT-01`, `PRT-CYC-01`).
+- Pelacak Umur Komponen (*Part Lifespan Tracker*) berbasis jam kerja aktual pisau & bearing dengan peringatan aus otomatis (*Normal*, *Warning*, *Overdue Replace*).
+- Alur Permintaan Suku Cadang (*Requisition Flow*) terhubung nomor mesin tujuan dan approval kepala teknisi.
+- Kartu Mutasi Stok Masuk/Keluar Gudang Sparepart terhubung modul pengadaan PO dan penilaian persediaan neraca (Akun COA 1204).
 
 ### 2. Integrasi Real-Time dengan HRIS Core System (`hris-core-system`)
 - Terhubung langsung dengan basis data kepegawaian & payroll HRIS:

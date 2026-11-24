@@ -26,6 +26,8 @@ import { HRISPayrollAllocation, JournalEntry, PricingConfig, PurchaseOrder } fro
 import { generateFinancialStatements } from '../lib/financial-engine';
 import { HRIS_WORKERS } from '../lib/hris-integration';
 import { SparePart, SparePartStockMutation } from '../lib/sparepart-types';
+import { generateCorporateHealthCheck } from '../lib/corporate-healthcheck';
+import CorporateHealthCheckView from './CorporateHealthCheckView';
 
 interface FinancialModuleProps {
   orders: Order[];
@@ -37,6 +39,7 @@ interface FinancialModuleProps {
   purchaseOrders: PurchaseOrder[];
   spareParts?: SparePart[];
   sparePartMutations?: SparePartStockMutation[];
+  machines?: Machine[];
   onSyncHRIS: () => void;
   onOpenPricingModal: () => void;
 }
@@ -51,10 +54,11 @@ export default function FinancialModule({
   purchaseOrders,
   spareParts = [],
   sparePartMutations = [],
+  machines = [],
   onSyncHRIS,
   onOpenPricingModal,
 }: FinancialModuleProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'pnl' | 'balance' | 'costing' | 'hris' | 'journal'>('pnl');
+  const [activeSubTab, setActiveSubTab] = useState<'pnl' | 'balance' | 'costing' | 'hris' | 'journal' | 'healthcheck'>('pnl');
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
@@ -71,6 +75,17 @@ export default function FinancialModule({
       spareParts,
       sparePartMutations
     );
+
+  // Generate deterministic corporate health check & board diagnostic report
+  const healthCheck = generateCorporateHealthCheck(
+    pnl,
+    balanceSheet,
+    orders,
+    batches,
+    machines,
+    spareParts,
+    sparePartMutations
+  );
 
   const formatIDR = (num: number) => {
     return 'Rp ' + Math.round(num).toLocaleString('id-ID');
@@ -306,6 +321,18 @@ export default function FinancialModule({
         >
           <BookOpen className="h-4 w-4" />
           <span>Buku Besar &amp; Jurnal Otomatis</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('healthcheck')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition ${
+            activeSubTab === 'healthcheck'
+              ? 'bg-purple-600 text-white shadow-xs'
+              : 'text-purple-700 bg-purple-50 hover:bg-purple-100/80 border border-purple-200'
+          }`}
+        >
+          <ShieldCheck className="h-4 w-4" />
+          <span>Corporate Health Check &amp; Direksi</span>
         </button>
       </div>
 
@@ -1037,6 +1064,11 @@ export default function FinancialModule({
             })}
           </div>
         </div>
+      )}
+
+      {/* SUB-TAB 6: CORPORATE HEALTH CHECK & LAPORAN DIREKSI */}
+      {activeSubTab === 'healthcheck' && (
+        <CorporateHealthCheckView healthCheck={healthCheck} />
       )}
     </div>
   );

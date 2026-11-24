@@ -564,6 +564,7 @@ export default function HomePage() {
             purchaseOrders={purchaseOrders}
             spareParts={spareParts}
             sparePartMutations={sparePartMutations}
+            machines={machines}
             onSyncHRIS={handleSyncHRIS}
             onOpenPricingModal={() => setIsPricingModalOpen(true)}
           />

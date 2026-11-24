@@ -1,0 +1,192 @@
+{
+  "perusahaan": "PT Industri Rajang Cengkeh Prima",
+  "mata_uang": "IDR",
+  "satuan": "juta",
+  "periode": [
+    "2025",
+    "2026"
+  ],
+  "sumber": "Sistem ERP Terpadu Perajangan Cengkeh (CloveERP)",
+  "neraca": {
+    "kas_dan_setara_kas": {
+      "2025": 1420,
+      "2026": 2185
+    },
+    "deposito_berjangka": {
+      "2025": 0,
+      "2026": 0
+    },
+    "investasi_jangka_pendek": {
+      "2025": 0,
+      "2026": 0
+    },
+    "piutang_usaha": {
+      "2025": 485,
+      "2026": 640
+    },
+    "piutang_lain_lain": {
+      "2025": 30,
+      "2026": 25
+    },
+    "persediaan": {
+      "2025": 780,
+      "2026": 850
+    },
+    "biaya_dibayar_dimuka": {
+      "2025": 45,
+      "2026": 55
+    },
+    "pajak_dibayar_dimuka": {
+      "2025": 20,
+      "2026": 25
+    },
+    "total_aset_lancar": {
+      "2025": 2780,
+      "2026": 3780
+    },
+    "aset_tetap": {
+      "2025": 1650,
+      "2026": 1820
+    },
+    "akumulasi_penyusutan": {
+      "2025": -320,
+      "2026": -490
+    },
+    "aset_tetap_neto": {
+      "2025": 1330,
+      "2026": 1330
+    },
+    "aset_tidak_lancar_lainnya": {
+      "2025": 90,
+      "2026": 90
+    },
+    "total_aset": {
+      "2025": 4200,
+      "2026": 5200
+    },
+    "utang_usaha": {
+      "2025": 410,
+      "2026": 380
+    },
+    "beban_akrual": {
+      "2025": 75,
+      "2026": 95
+    },
+    "utang_pajak": {
+      "2025": 55,
+      "2026": 85
+    },
+    "utang_bank_jangka_pendek": {
+      "2025": 0,
+      "2026": 0
+    },
+    "total_liabilitas_jangka_pendek": {
+      "2025": 540,
+      "2026": 560
+    },
+    "utang_bank_jangka_panjang": {
+      "2025": 0,
+      "2026": 0
+    },
+    "total_liabilitas_jangka_panjang": {
+      "2025": 0,
+      "2026": 0
+    },
+    "total_liabilitas": {
+      "2025": 540,
+      "2026": 560
+    },
+    "modal_disetor": {
+      "2025": 2500,
+      "2026": 2500
+    },
+    "tambahan_modal_disetor": {
+      "2025": 0,
+      "2026": 0
+    },
+    "saldo_laba": {
+      "2025": 1160,
+      "2026": 2140
+    },
+    "total_ekuitas": {
+      "2025": 3660,
+      "2026": 4640
+    },
+    "total_liabilitas_dan_ekuitas": {
+      "2025": 4200,
+      "2026": 5200
+    }
+  },
+  "laba_rugi": {
+    "pendapatan": {
+      "2025": 7250,
+      "2026": 9680
+    },
+    "beban_pokok_penjualan": {
+      "2025": 5075,
+      "2026": 6680
+    },
+    "laba_kotor": {
+      "2025": 2175,
+      "2026": 3000
+    },
+    "beban_penjualan": {
+      "2025": 210,
+      "2026": 280
+    },
+    "beban_umum_administrasi": {
+      "2025": 580,
+      "2026": 720
+    },
+    "beban_usaha": {
+      "2025": 790,
+      "2026": 1000
+    },
+    "laba_usaha": {
+      "2025": 1385,
+      "2026": 2000
+    },
+    "beban_bunga": {
+      "2025": 0,
+      "2026": 0
+    },
+    "pendapatan_keuangan": {
+      "2025": 25,
+      "2026": 42
+    },
+    "beban_pajak": {
+      "2025": 300,
+      "2026": 435
+    },
+    "laba_bersih": {
+      "2025": 1110,
+      "2026": 1607
+    },
+    "penyusutan": {
+      "2025": 160,
+      "2026": 170
+    }
+  },
+  "arus_kas": {
+    "arus_kas_operasi": {
+      "2025": 1280,
+      "2026": 1820
+    },
+    "arus_kas_investasi": {
+      "2025": -340,
+      "2026": -170
+    },
+    "arus_kas_pendanaan": {
+      "2025": -520,
+      "2026": -628
+    },
+    "belanja_modal": {
+      "2025": 340,
+      "2026": 170
+    },
+    "kas_akhir": {
+      "2025": 1420,
+      "2026": 2185
+    }
+  }
+}

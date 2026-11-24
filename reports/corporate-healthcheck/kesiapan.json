@@ -1,0 +1,138 @@
+{
+  "skrip": "skor_kesiapan.py v1.0.0",
+  "skor_rata_rata": 1.25,
+  "level": 1,
+  "nama_level": "Data tersebar",
+  "deskripsi_level": "Sebagian besar data operasional dicatat manual atau di banyak file terpisah. Angka lambat tersedia dan sering berbeda antarbagian. Laporan keuangan hampir menjadi satu-satunya gambaran kondisi perusahaan.",
+  "semua_level": [
+    {
+      "level": 1,
+      "nama": "Data tersebar",
+      "rentang": "rata-rata < 1,75",
+      "deskripsi": "Sebagian besar data operasional dicatat manual atau di banyak file terpisah. Angka lambat tersedia dan sering berbeda antarbagian. Laporan keuangan hampir menjadi satu-satunya gambaran kondisi perusahaan."
+    },
+    {
+      "level": 2,
+      "nama": "Tercatat tetapi terpisah",
+      "rentang": "1,75 - < 2,50",
+      "deskripsi": "Setiap bagian sudah mencatat datanya, tetapi di sistem atau file masing-masing. Laporan bisa dibuat, namun butuh rekonsiliasi manual dan sulit menelusuri penyebab di balik angka."
+    },
+    {
+      "level": 3,
+      "nama": "Terhubung sebagian",
+      "rentang": "2,50 - < 3,25",
+      "deskripsi": "Sebagian data sudah terintegrasi dan laporan rutin relatif tepat waktu. Penelusuran penyebab (per produk, per lini, per proses) masih sebagian manual."
+    },
+    {
+      "level": 4,
+      "nama": "Terintegrasi dan dipantau",
+      "rentang": "≥ 3,25",
+      "deskripsi": "Data produksi, gudang, mutu, dan keuangan terhubung; KPI dipantau harian dan ditindaklanjuti. Pertanyaan 'kenapa' di balik angka keuangan bisa dijawab dalam hitungan jam."
+    }
+  ],
+  "rincian": [
+    {
+      "no": 1,
+      "area": "Kecepatan tutup buku",
+      "jawaban": "A",
+      "jawaban_teks": "Lebih dari 20 hari kerja, atau tidak menentu",
+      "skor": 1,
+      "mengapa_penting": "Laporan yang terlambat berarti keputusan diambil berdasarkan kondisi sebulan lalu.",
+      "kategori_solusi": "Integrasi data transaksi ke keuangan agar tutup buku tidak bergantung pada rekap manual"
+    },
+    {
+      "no": 2,
+      "area": "HPP per produk/order",
+      "jawaban": "A",
+      "jawaban_teks": "Tidak bisa; hanya tahu HPP total",
+      "skor": 1,
+      "mengapa_penting": "Tanpa HPP per order, tidak bisa diketahui order atau pelanggan mana yang sebenarnya merugi.",
+      "kategori_solusi": "Perhitungan biaya per order yang terhubung dengan data produksi dan pembelian"
+    },
+    {
+      "no": 3,
+      "area": "Visibilitas stok",
+      "jawaban": "A",
+      "jawaban_teks": "Harus stock opname dulu / lebih dari 1 minggu",
+      "skor": 1,
+      "mengapa_penting": "Persediaan adalah tempat kas paling sering tertahan; tanpa visibilitas, penumpukan baru ketahuan di akhir tahun.",
+      "kategori_solusi": "Pencatatan stok dan WIP yang terhubung antara gudang, produksi, dan keuangan"
+    },
+    {
+      "no": 4,
+      "area": "Pencatatan mutu",
+      "jawaban": "B",
+      "jawaban_teks": "Tercatat jumlahnya (pcs) saja, tidak rutin",
+      "skor": 2,
+      "mengapa_penting": "Biaya mutu yang tidak terlihat menggerus margin tanpa pernah muncul sebagai pos tersendiri di laporan keuangan.",
+      "kategori_solusi": "Sistem pengendalian mutu dengan pencatatan biaya mutu per proses"
+    },
+    {
+      "no": 5,
+      "area": "Ketergantungan pada Excel",
+      "jawaban": "A",
+      "jawaban_teks": "Lebih dari 20 file",
+      "skor": 1,
+      "mengapa_penting": "Setiap penggabungan manual menambah waktu dan peluang salah angka.",
+      "kategori_solusi": "Satu sumber data bersama untuk laporan manajemen"
+    },
+    {
+      "no": 6,
+      "area": "Integrasi produksi-gudang-keuangan",
+      "jawaban": "A",
+      "jawaban_teks": "Tidak; data diketik ulang antarbagian",
+      "skor": 1,
+      "mengapa_penting": "Pertanyaan 'kenapa' di balik angka keuangan hanya bisa dijawab jika data operasional dan keuangan bisa ditelusuri bersama.",
+      "kategori_solusi": "Integrasi data produksi, gudang, dan keuangan"
+    },
+    {
+      "no": 7,
+      "area": "Konsistensi angka antardepartemen",
+      "jawaban": "A",
+      "jawaban_teks": "Hampir setiap bulan; perlu rapat rekonsiliasi",
+      "skor": 1,
+      "mengapa_penting": "Jika angka berbeda, rapat habis untuk memperdebatkan angka yang benar, bukan keputusan.",
+      "kategori_solusi": "Definisi data yang seragam dan satu sumber data bersama"
+    },
+    {
+      "no": 8,
+      "area": "KPI produksi harian",
+      "jawaban": "B",
+      "jawaban_teks": "Ada, tetapi direkap mingguan/bulanan",
+      "skor": 2,
+      "mengapa_penting": "Masalah produktivitas yang tidak terlihat harian baru muncul sebagai kenaikan biaya di akhir periode.",
+      "kategori_solusi": "Pengukuran dan perbaikan produktivitas lini produksi secara harian"
+    }
+  ],
+  "area_prioritas": [
+    {
+      "no": 1,
+      "area": "Kecepatan tutup buku",
+      "jawaban": "A",
+      "jawaban_teks": "Lebih dari 20 hari kerja, atau tidak menentu",
+      "skor": 1,
+      "mengapa_penting": "Laporan yang terlambat berarti keputusan diambil berdasarkan kondisi sebulan lalu.",
+      "kategori_solusi": "Integrasi data transaksi ke keuangan agar tutup buku tidak bergantung pada rekap manual"
+    },
+    {
+      "no": 2,
+      "area": "HPP per produk/order",
+      "jawaban": "A",
+      "jawaban_teks": "Tidak bisa; hanya tahu HPP total",
+      "skor": 1,
+      "mengapa_penting": "Tanpa HPP per order, tidak bisa diketahui order atau pelanggan mana yang sebenarnya merugi.",
+      "kategori_solusi": "Perhitungan biaya per order yang terhubung dengan data produksi dan pembelian"
+    },
+    {
+      "no": 3,
+      "area": "Visibilitas stok",
+      "jawaban": "A",
+      "jawaban_teks": "Harus stock opname dulu / lebih dari 1 minggu",
+      "skor": 1,
+      "mengapa_penting": "Persediaan adalah tempat kas paling sering tertahan; tanpa visibilitas, penumpukan baru ketahuan di akhir tahun.",
+      "kategori_solusi": "Pencatatan stok dan WIP yang terhubung antara gudang, produksi, dan keuangan"
+    }
+  ],
+  "jenis_area_prioritas": "terlemah",
+  "kode_ringkas": "L1-1.2.3"
+}

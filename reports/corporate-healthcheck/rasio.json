@@ -1,0 +1,1113 @@
+{
+  "meta": {
+    "perusahaan": "PT Industri Rajang Cengkeh Prima",
+    "mata_uang": "IDR",
+    "satuan": "juta",
+    "periode": [
+      "2025",
+      "2026"
+    ],
+    "hari_periode": {
+      "2025": 365.0,
+      "2026": 365.0
+    },
+    "metode": "Saldo neraca akhir periode (bukan rata-rata). Laba disetahunkan bila periode < 365 hari.",
+    "metode_kode": "akhir",
+    "sumber": "Sistem ERP Terpadu Perajangan Cengkeh (CloveERP)",
+    "skrip": "hitung_rasio.py v1.1.0",
+    "gaya": "ringkas"
+  },
+  "validasi": {
+    "status": "lolos",
+    "peringatan": []
+  },
+  "pos_utama": {
+    "pendapatan": {
+      "label": "Pendapatan",
+      "satuan": "uang",
+      "nilai": {
+        "2025": 7250.0,
+        "2026": 9680.0
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 7250.0,
+          "ke": 9680.0,
+          "selisih": 2430.0,
+          "persen": 33.5172
+        }
+      }
+    },
+    "laba_kotor": {
+      "label": "Laba kotor",
+      "satuan": "uang",
+      "nilai": {
+        "2025": 2175.0,
+        "2026": 3000.0
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 2175.0,
+          "ke": 3000.0,
+          "selisih": 825.0,
+          "persen": 37.931
+        }
+      }
+    },
+    "beban_usaha": {
+      "label": "Beban usaha",
+      "satuan": "uang",
+      "nilai": {
+        "2025": 790.0,
+        "2026": 1000.0
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 790.0,
+          "ke": 1000.0,
+          "selisih": 210.0,
+          "persen": 26.5823
+        }
+      }
+    },
+    "laba_usaha": {
+      "label": "Laba usaha",
+      "satuan": "uang",
+      "nilai": {
+        "2025": 1385.0,
+        "2026": 2000.0
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 1385.0,
+          "ke": 2000.0,
+          "selisih": 615.0,
+          "persen": 44.4043
+        }
+      }
+    },
+    "laba_bersih": {
+      "label": "Laba bersih",
+      "satuan": "uang",
+      "nilai": {
+        "2025": 1110.0,
+        "2026": 1607.0
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 1110.0,
+          "ke": 1607.0,
+          "selisih": 497.0,
+          "persen": 44.7748
+        }
+      }
+    },
+    "arus_kas_operasi": {
+      "label": "Arus kas operasi",
+      "satuan": "uang",
+      "nilai": {
+        "2025": 1280.0,
+        "2026": 1820.0
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 1280.0,
+          "ke": 1820.0,
+          "selisih": 540.0,
+          "persen": 42.1875
+        }
+      }
+    },
+    "arus_kas_bebas": {
+      "label": "Arus kas bebas (operasi - belanja modal)",
+      "satuan": "uang",
+      "nilai": {
+        "2025": 940.0,
+        "2026": 1650.0
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 940.0,
+          "ke": 1650.0,
+          "selisih": 710.0,
+          "persen": 75.5319
+        }
+      }
+    },
+    "kas_dan_setara_kas": {
+      "label": "Kas dan setara kas",
+      "satuan": "uang",
+      "nilai": {
+        "2025": 1420.0,
+        "2026": 2185.0
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 1420.0,
+          "ke": 2185.0,
+          "selisih": 765.0,
+          "persen": 53.8732
+        }
+      }
+    },
+    "piutang_usaha": {
+      "label": "Piutang usaha",
+      "satuan": "uang",
+      "nilai": {
+        "2025": 485.0,
+        "2026": 640.0
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 485.0,
+          "ke": 640.0,
+          "selisih": 155.0,
+          "persen": 31.9588
+        }
+      }
+    },
+    "persediaan": {
+      "label": "Persediaan",
+      "satuan": "uang",
+      "nilai": {
+        "2025": 780.0,
+        "2026": 850.0
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 780.0,
+          "ke": 850.0,
+          "selisih": 70.0,
+          "persen": 8.9744
+        }
+      }
+    },
+    "utang_usaha": {
+      "label": "Utang usaha",
+      "satuan": "uang",
+      "nilai": {
+        "2025": 410.0,
+        "2026": 380.0
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 410.0,
+          "ke": 380.0,
+          "selisih": -30.0,
+          "persen": -7.3171
+        }
+      }
+    },
+    "utang_bank_total": {
+      "label": "Utang bank (pendek + panjang)",
+      "satuan": "uang",
+      "nilai": {
+        "2025": 0,
+        "2026": 0
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 0,
+          "ke": 0,
+          "selisih": 0,
+          "persen": null,
+          "catatan": "dasar nol/negatif, persentase tidak bermakna"
+        }
+      }
+    },
+    "total_aset": {
+      "label": "Total aset",
+      "satuan": "uang",
+      "nilai": {
+        "2025": 4200.0,
+        "2026": 5200.0
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 4200.0,
+          "ke": 5200.0,
+          "selisih": 1000.0,
+          "persen": 23.8095
+        }
+      }
+    },
+    "total_ekuitas": {
+      "label": "Total ekuitas",
+      "satuan": "uang",
+      "nilai": {
+        "2025": 3660.0,
+        "2026": 4640.0
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 3660.0,
+          "ke": 4640.0,
+          "selisih": 980.0,
+          "persen": 26.776
+        }
+      }
+    }
+  },
+  "rasio": {
+    "current_ratio": {
+      "label": "Current ratio",
+      "kelompok": "Likuiditas",
+      "satuan": "kali",
+      "rumus": "Aset lancar / Liabilitas jangka pendek",
+      "nilai": {
+        "2025": 5.1481,
+        "2026": 6.75
+      },
+      "perhitungan": {
+        "2025": "2.780 ÷ 540 = 5,15x",
+        "2026": "3.780 ÷ 560 = 6,75x"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 5.1481,
+          "ke": 6.75,
+          "selisih": 1.6019,
+          "persen": 31.1151
+        }
+      }
+    },
+    "quick_ratio": {
+      "label": "Quick ratio",
+      "kelompok": "Likuiditas",
+      "satuan": "kali",
+      "rumus": "(Aset lancar - Persediaan) / Liabilitas jangka pendek",
+      "nilai": {
+        "2025": 3.7037,
+        "2026": 5.2321
+      },
+      "perhitungan": {
+        "2025": "(2.780 - 780) ÷ 540 = 3,70x",
+        "2026": "(3.780 - 850) ÷ 560 = 5,23x"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 3.7037,
+          "ke": 5.2321,
+          "selisih": 1.5284,
+          "persen": 41.2679
+        }
+      }
+    },
+    "cash_ratio": {
+      "label": "Rasio kas",
+      "kelompok": "Likuiditas",
+      "satuan": "kali",
+      "rumus": "Kas dan setara kas / Liabilitas jangka pendek",
+      "nilai": {
+        "2025": 2.6296,
+        "2026": 3.9018
+      },
+      "perhitungan": {
+        "2025": "1.420 ÷ 540 = 2,63x",
+        "2026": "2.185 ÷ 560 = 3,90x"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 2.6296,
+          "ke": 3.9018,
+          "selisih": 1.2722,
+          "persen": 48.3778
+        }
+      }
+    },
+    "gross_margin": {
+      "label": "Margin laba kotor",
+      "kelompok": "Profitabilitas",
+      "satuan": "persen",
+      "rumus": "Laba kotor / Pendapatan",
+      "nilai": {
+        "2025": 30.0,
+        "2026": 30.9917
+      },
+      "perhitungan": {
+        "2025": "2.175 ÷ 7.250 × 100% = 30,0%",
+        "2026": "3.000 ÷ 9.680 × 100% = 31,0%"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 30.0,
+          "ke": 30.9917,
+          "selisih": 0.9917
+        }
+      }
+    },
+    "operating_margin": {
+      "label": "Margin laba usaha",
+      "kelompok": "Profitabilitas",
+      "satuan": "persen",
+      "rumus": "Laba usaha / Pendapatan",
+      "nilai": {
+        "2025": 19.1034,
+        "2026": 20.6612
+      },
+      "perhitungan": {
+        "2025": "1.385 ÷ 7.250 × 100% = 19,1%",
+        "2026": "2.000 ÷ 9.680 × 100% = 20,7%"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 19.1034,
+          "ke": 20.6612,
+          "selisih": 1.5577
+        }
+      }
+    },
+    "ebitda_margin": {
+      "label": "Margin EBITDA",
+      "kelompok": "Profitabilitas",
+      "satuan": "persen",
+      "rumus": "(Laba usaha + Penyusutan) / Pendapatan",
+      "nilai": {
+        "2025": 21.3103,
+        "2026": 22.4174
+      },
+      "perhitungan": {
+        "2025": "(1.385 + 160) ÷ 7.250 × 100% = 21,3%",
+        "2026": "(2.000 + 170) ÷ 9.680 × 100% = 22,4%"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 21.3103,
+          "ke": 22.4174,
+          "selisih": 1.107
+        }
+      }
+    },
+    "net_margin": {
+      "label": "Margin laba bersih",
+      "kelompok": "Profitabilitas",
+      "satuan": "persen",
+      "rumus": "Laba bersih / Pendapatan",
+      "nilai": {
+        "2025": 15.3103,
+        "2026": 16.6012
+      },
+      "perhitungan": {
+        "2025": "1.110 ÷ 7.250 × 100% = 15,3%",
+        "2026": "1.607 ÷ 9.680 × 100% = 16,6%"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 15.3103,
+          "ke": 16.6012,
+          "selisih": 1.2909
+        }
+      }
+    },
+    "opex_ratio": {
+      "label": "Rasio beban usaha",
+      "kelompok": "Profitabilitas",
+      "satuan": "persen",
+      "rumus": "Beban usaha / Pendapatan",
+      "nilai": {
+        "2025": 10.8966,
+        "2026": 10.3306
+      },
+      "perhitungan": {
+        "2025": "790 ÷ 7.250 × 100% = 10,9%",
+        "2026": "1.000 ÷ 9.680 × 100% = 10,3%"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 10.8966,
+          "ke": 10.3306,
+          "selisih": -0.566
+        }
+      }
+    },
+    "effective_tax": {
+      "label": "Tarif pajak efektif",
+      "kelompok": "Profitabilitas",
+      "satuan": "persen",
+      "rumus": "Beban pajak / Laba sebelum pajak",
+      "nilai": {
+        "2025": null,
+        "2026": null
+      },
+      "perhitungan": {
+        "2025": "tidak dapat dihitung",
+        "2026": "tidak dapat dihitung"
+      },
+      "perubahan": {
+        "2025->2026": null
+      }
+    },
+    "roa": {
+      "label": "ROA",
+      "kelompok": "Profitabilitas",
+      "satuan": "persen",
+      "rumus": "Laba bersih (disetahunkan) / Total aset",
+      "nilai": {
+        "2025": 26.4286,
+        "2026": 30.9038
+      },
+      "perhitungan": {
+        "2025": "1.110 ÷ 4.200 × 100% = 26,4%",
+        "2026": "1.607 ÷ 5.200 × 100% = 30,9%"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 26.4286,
+          "ke": 30.9038,
+          "selisih": 4.4753
+        }
+      }
+    },
+    "roe": {
+      "label": "ROE",
+      "kelompok": "Profitabilitas",
+      "satuan": "persen",
+      "rumus": "Laba bersih (disetahunkan) / Total ekuitas",
+      "nilai": {
+        "2025": 30.3279,
+        "2026": 34.6336
+      },
+      "perhitungan": {
+        "2025": "1.110 ÷ 3.660 × 100% = 30,3%",
+        "2026": "1.607 ÷ 4.640 × 100% = 34,6%"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 30.3279,
+          "ke": 34.6336,
+          "selisih": 4.3058
+        }
+      }
+    },
+    "equity_multiplier": {
+      "label": "Pengali ekuitas (DuPont)",
+      "kelompok": "Profitabilitas",
+      "satuan": "kali",
+      "rumus": "Total aset / Total ekuitas",
+      "nilai": {
+        "2025": 1.1475,
+        "2026": 1.1207
+      },
+      "perhitungan": {
+        "2025": "4.200 ÷ 3.660 = 1,15x",
+        "2026": "5.200 ÷ 4.640 = 1,12x"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 1.1475,
+          "ke": 1.1207,
+          "selisih": -0.0269,
+          "persen": -2.3399
+        }
+      }
+    },
+    "der": {
+      "label": "DER (total liabilitas / ekuitas)",
+      "kelompok": "Leverage",
+      "satuan": "kali",
+      "rumus": "Total liabilitas / Total ekuitas",
+      "nilai": {
+        "2025": 0.1475,
+        "2026": 0.1207
+      },
+      "perhitungan": {
+        "2025": "540 ÷ 3.660 = 0,15x",
+        "2026": "560 ÷ 4.640 = 0,12x"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 0.1475,
+          "ke": 0.1207,
+          "selisih": -0.0269,
+          "persen": -18.1992
+        }
+      }
+    },
+    "der_berbunga": {
+      "label": "Utang bank / ekuitas",
+      "kelompok": "Leverage",
+      "satuan": "kali",
+      "rumus": "(Utang bank pendek + panjang) / Total ekuitas",
+      "nilai": {
+        "2025": 0.0,
+        "2026": 0.0
+      },
+      "perhitungan": {
+        "2025": "0 ÷ 3.660 = 0,00x",
+        "2026": "0 ÷ 4.640 = 0,00x"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 0.0,
+          "ke": 0.0,
+          "selisih": 0.0,
+          "persen": null,
+          "catatan": "dasar nol/negatif, persentase tidak bermakna"
+        }
+      }
+    },
+    "debt_to_assets": {
+      "label": "Liabilitas / aset",
+      "kelompok": "Leverage",
+      "satuan": "persen",
+      "rumus": "Total liabilitas / Total aset",
+      "nilai": {
+        "2025": 12.8571,
+        "2026": 10.7692
+      },
+      "perhitungan": {
+        "2025": "540 ÷ 4.200 × 100% = 12,9%",
+        "2026": "560 ÷ 5.200 × 100% = 10,8%"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 12.8571,
+          "ke": 10.7692,
+          "selisih": -2.0879
+        }
+      }
+    },
+    "net_debt_ebitda": {
+      "label": "Utang bank bersih / EBITDA",
+      "kelompok": "Leverage",
+      "satuan": "kali",
+      "rumus": "(Utang bank - Kas) / EBITDA (disetahunkan)",
+      "nilai": {
+        "2025": -0.9191,
+        "2026": -1.0069
+      },
+      "perhitungan": {
+        "2025": "(0 - 1.420) ÷ 1.545 = -0,92x",
+        "2026": "(0 - 2.185) ÷ 2.170 = -1,01x"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": -0.9191,
+          "ke": -1.0069,
+          "selisih": -0.0878,
+          "persen": null,
+          "catatan": "dasar nol/negatif, persentase tidak bermakna"
+        }
+      }
+    },
+    "interest_coverage": {
+      "label": "Interest coverage",
+      "kelompok": "Leverage",
+      "satuan": "kali",
+      "rumus": "Laba usaha / Beban bunga",
+      "nilai": {
+        "2025": null,
+        "2026": null
+      },
+      "perhitungan": {
+        "2025": "tidak dapat dihitung",
+        "2026": "tidak dapat dihitung"
+      },
+      "perubahan": {
+        "2025->2026": null
+      }
+    },
+    "dio": {
+      "label": "DIO (hari persediaan)",
+      "kelompok": "Efisiensi",
+      "satuan": "hari",
+      "rumus": "Persediaan / Beban pokok penjualan x hari periode",
+      "nilai": {
+        "2025": 56.0985,
+        "2026": 46.4446
+      },
+      "perhitungan": {
+        "2025": "780 ÷ 5.075 × 365 = 56 hari",
+        "2026": "850 ÷ 6.680 × 365 = 46 hari"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 56.0985,
+          "ke": 46.4446,
+          "selisih": -9.6539
+        }
+      }
+    },
+    "dso": {
+      "label": "DSO (hari piutang)",
+      "kelompok": "Efisiensi",
+      "satuan": "hari",
+      "rumus": "Piutang usaha / Pendapatan x hari periode",
+      "nilai": {
+        "2025": 24.4172,
+        "2026": 24.1322
+      },
+      "perhitungan": {
+        "2025": "485 ÷ 7.250 × 365 = 24 hari",
+        "2026": "640 ÷ 9.680 × 365 = 24 hari"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 24.4172,
+          "ke": 24.1322,
+          "selisih": -0.285
+        }
+      }
+    },
+    "dpo": {
+      "label": "DPO (hari utang usaha)",
+      "kelompok": "Efisiensi",
+      "satuan": "hari",
+      "rumus": "Utang usaha / Beban pokok penjualan x hari periode",
+      "nilai": {
+        "2025": 29.4877,
+        "2026": 20.7635
+      },
+      "perhitungan": {
+        "2025": "410 ÷ 5.075 × 365 = 29 hari",
+        "2026": "380 ÷ 6.680 × 365 = 21 hari"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 29.4877,
+          "ke": 20.7635,
+          "selisih": -8.7242
+        }
+      }
+    },
+    "ccc": {
+      "label": "Cash conversion cycle",
+      "kelompok": "Efisiensi",
+      "satuan": "hari",
+      "rumus": "DIO + DSO - DPO",
+      "nilai": {
+        "2025": 51.0281,
+        "2026": 49.8134
+      },
+      "perhitungan": {
+        "2025": "56 hari + 24 hari - 29 hari = 51 hari",
+        "2026": "46 hari + 24 hari - 21 hari = 50 hari"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 51.0281,
+          "ke": 49.8134,
+          "selisih": -1.2147
+        }
+      }
+    },
+    "inventory_turnover": {
+      "label": "Perputaran persediaan",
+      "kelompok": "Efisiensi",
+      "satuan": "kali",
+      "rumus": "HPP (disetahunkan) / Persediaan",
+      "nilai": {
+        "2025": 6.5064,
+        "2026": 7.8588
+      },
+      "perhitungan": {
+        "2025": "5.075 ÷ 780 = 6,51x",
+        "2026": "6.680 ÷ 850 = 7,86x"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 6.5064,
+          "ke": 7.8588,
+          "selisih": 1.3524,
+          "persen": 20.7859
+        }
+      }
+    },
+    "receivable_turnover": {
+      "label": "Perputaran piutang",
+      "kelompok": "Efisiensi",
+      "satuan": "kali",
+      "rumus": "Pendapatan (disetahunkan) / Piutang usaha",
+      "nilai": {
+        "2025": 14.9485,
+        "2026": 15.125
+      },
+      "perhitungan": {
+        "2025": "7.250 ÷ 485 = 14,95x",
+        "2026": "9.680 ÷ 640 = 15,12x"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 14.9485,
+          "ke": 15.125,
+          "selisih": 0.1765,
+          "persen": 1.181
+        }
+      }
+    },
+    "asset_turnover": {
+      "label": "Perputaran aset",
+      "kelompok": "Efisiensi",
+      "satuan": "kali",
+      "rumus": "Pendapatan (disetahunkan) / Total aset",
+      "nilai": {
+        "2025": 1.7262,
+        "2026": 1.8615
+      },
+      "perhitungan": {
+        "2025": "7.250 ÷ 4.200 = 1,73x",
+        "2026": "9.680 ÷ 5.200 = 1,86x"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 1.7262,
+          "ke": 1.8615,
+          "selisih": 0.1353,
+          "persen": 7.8408
+        }
+      }
+    },
+    "cfo_to_ni": {
+      "label": "Arus kas operasi / laba bersih",
+      "kelompok": "Kualitas laba & kas",
+      "satuan": "kali",
+      "rumus": "Arus kas operasi / Laba bersih",
+      "nilai": {
+        "2025": 1.1532,
+        "2026": 1.1325
+      },
+      "perhitungan": {
+        "2025": "1.280 ÷ 1.110 = 1,15x",
+        "2026": "1.820 ÷ 1.607 = 1,13x"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 1.1532,
+          "ke": 1.1325,
+          "selisih": -0.0206,
+          "persen": -1.7871
+        }
+      }
+    },
+    "fcf_margin": {
+      "label": "Margin arus kas bebas",
+      "kelompok": "Kualitas laba & kas",
+      "satuan": "persen",
+      "rumus": "(Arus kas operasi - Belanja modal) / Pendapatan",
+      "nilai": {
+        "2025": 12.9655,
+        "2026": 17.0455
+      },
+      "perhitungan": {
+        "2025": "(1.280 - 340) ÷ 7.250 × 100% = 13,0%",
+        "2026": "(1.820 - 170) ÷ 9.680 × 100% = 17,0%"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 12.9655,
+          "ke": 17.0455,
+          "selisih": 4.0799
+        }
+      }
+    },
+    "capex_to_dep": {
+      "label": "Belanja modal / penyusutan",
+      "kelompok": "Kualitas laba & kas",
+      "satuan": "kali",
+      "rumus": "Belanja modal / Penyusutan",
+      "nilai": {
+        "2025": 2.125,
+        "2026": 1.0
+      },
+      "perhitungan": {
+        "2025": "340 ÷ 160 = 2,12x",
+        "2026": "170 ÷ 170 = 1,00x"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 2.125,
+          "ke": 1.0,
+          "selisih": -1.125,
+          "persen": -52.9412
+        }
+      }
+    },
+    "altman_z": {
+      "label": "Skor Altman Z'' (indikatif)",
+      "kelompok": "Kesehatan keuangan",
+      "satuan": "skor",
+      "rumus": "6,56 x (Aset lancar - Liab. pendek)/Aset + 3,26 x Saldo laba/Aset + 6,72 x Laba usaha/Aset + 1,05 x Ekuitas/Liabilitas",
+      "nilai": {
+        "2025": 13.7317,
+        "2026": 16.6884
+      },
+      "perhitungan": {
+        "2025": "6,56×0,533 + 3,26×0,276 + 6,72×0,330 + 1,05×6,778 = 13,73",
+        "2026": "6,56×0,619 + 3,26×0,412 + 6,72×0,385 + 1,05×8,286 = 16,69"
+      },
+      "perubahan": {
+        "2025->2026": {
+          "dari": 13.7317,
+          "ke": 16.6884,
+          "selisih": 2.9567
+        }
+      }
+    }
+  },
+  "laporan_terstandar": {
+    "neraca": {
+      "kas_dan_setara_kas": {
+        "2025": 1420.0,
+        "2026": 2185.0
+      },
+      "deposito_berjangka": {
+        "2025": 0.0,
+        "2026": 0.0
+      },
+      "investasi_jangka_pendek": {
+        "2025": 0.0,
+        "2026": 0.0
+      },
+      "piutang_usaha": {
+        "2025": 485.0,
+        "2026": 640.0
+      },
+      "piutang_lain_lain": {
+        "2025": 30.0,
+        "2026": 25.0
+      },
+      "persediaan": {
+        "2025": 780.0,
+        "2026": 850.0
+      },
+      "biaya_dibayar_dimuka": {
+        "2025": 45.0,
+        "2026": 55.0
+      },
+      "pajak_dibayar_dimuka": {
+        "2025": 20.0,
+        "2026": 25.0
+      },
+      "total_aset_lancar": {
+        "2025": 2780.0,
+        "2026": 3780.0
+      },
+      "aset_tetap": {
+        "2025": 1650.0,
+        "2026": 1820.0
+      },
+      "akumulasi_penyusutan": {
+        "2025": -320.0,
+        "2026": -490.0
+      },
+      "aset_tetap_neto": {
+        "2025": 1330.0,
+        "2026": 1330.0
+      },
+      "aset_tidak_lancar_lainnya": {
+        "2025": 90.0,
+        "2026": 90.0
+      },
+      "total_aset": {
+        "2025": 4200.0,
+        "2026": 5200.0
+      },
+      "utang_usaha": {
+        "2025": 410.0,
+        "2026": 380.0
+      },
+      "beban_akrual": {
+        "2025": 75.0,
+        "2026": 95.0
+      },
+      "utang_pajak": {
+        "2025": 55.0,
+        "2026": 85.0
+      },
+      "utang_bank_jangka_pendek": {
+        "2025": 0.0,
+        "2026": 0.0
+      },
+      "total_liabilitas_jangka_pendek": {
+        "2025": 540.0,
+        "2026": 560.0
+      },
+      "utang_bank_jangka_panjang": {
+        "2025": 0.0,
+        "2026": 0.0
+      },
+      "total_liabilitas_jangka_panjang": {
+        "2025": 0.0,
+        "2026": 0.0
+      },
+      "total_liabilitas": {
+        "2025": 540.0,
+        "2026": 560.0
+      },
+      "modal_disetor": {
+        "2025": 2500.0,
+        "2026": 2500.0
+      },
+      "tambahan_modal_disetor": {
+        "2025": 0.0,
+        "2026": 0.0
+      },
+      "saldo_laba": {
+        "2025": 1160.0,
+        "2026": 2140.0
+      },
+      "total_ekuitas": {
+        "2025": 3660.0,
+        "2026": 4640.0
+      },
+      "total_liabilitas_dan_ekuitas": {
+        "2025": 4200.0,
+        "2026": 5200.0
+      },
+      "utang_bank_total": {
+        "2025": 0,
+        "2026": 0
+      }
+    },
+    "laba_rugi": {
+      "pendapatan": {
+        "2025": 7250.0,
+        "2026": 9680.0
+      },
+      "beban_pokok_penjualan": {
+        "2025": 5075.0,
+        "2026": 6680.0
+      },
+      "laba_kotor": {
+        "2025": 2175.0,
+        "2026": 3000.0
+      },
+      "beban_penjualan": {
+        "2025": 210.0,
+        "2026": 280.0
+      },
+      "beban_umum_administrasi": {
+        "2025": 580.0,
+        "2026": 720.0
+      },
+      "beban_usaha": {
+        "2025": 790.0,
+        "2026": 1000.0
+      },
+      "laba_usaha": {
+        "2025": 1385.0,
+        "2026": 2000.0
+      },
+      "beban_bunga": {
+        "2025": 0.0,
+        "2026": 0.0
+      },
+      "pendapatan_keuangan": {
+        "2025": 25.0,
+        "2026": 42.0
+      },
+      "beban_pajak": {
+        "2025": 300.0,
+        "2026": 435.0
+      },
+      "laba_bersih": {
+        "2025": 1110.0,
+        "2026": 1607.0
+      },
+      "penyusutan": {
+        "2025": 160.0,
+        "2026": 170.0
+      }
+    },
+    "arus_kas": {
+      "arus_kas_operasi": {
+        "2025": 1280.0,
+        "2026": 1820.0
+      },
+      "arus_kas_investasi": {
+        "2025": -340.0,
+        "2026": -170.0
+      },
+      "arus_kas_pendanaan": {
+        "2025": -520.0,
+        "2026": -628.0
+      },
+      "belanja_modal": {
+        "2025": 340.0,
+        "2026": 170.0
+      },
+      "kas_akhir": {
+        "2025": 1420.0,
+        "2026": 2185.0
+      },
+      "arus_kas_bebas": {
+        "2025": 940.0,
+        "2026": 1650.0
+      }
+    }
+  },
+  "checklist": [
+    {
+      "judul": "Rasio lancar",
+      "status": "aman",
+      "nilai": "6,75x",
+      "ambang": "aman ≥ 1,50x; kritis < 1,00x"
+    },
+    {
+      "judul": "Quick ratio",
+      "status": "aman",
+      "nilai": "5,23x",
+      "ambang": "aman ≥ 1,00x; kritis < 0,70x"
+    },
+    {
+      "judul": "Laba menjadi kas (arus kas operasi ÷ laba)",
+      "status": "aman",
+      "nilai": "1,13x",
+      "ambang": "aman ≥ 1,00x; kritis < 0,50x"
+    },
+    {
+      "judul": "Margin laba kotor",
+      "status": "aman",
+      "nilai": "30,0% → 31,0% (+1,0 poin)",
+      "ambang": "aman bila turun < 1,0 poin"
+    },
+    {
+      "judul": "Margin laba bersih",
+      "status": "aman",
+      "nilai": "15,3% → 16,6% (+1,3 poin)",
+      "ambang": "aman bila turun < 1,0 poin"
+    },
+    {
+      "judul": "Hari piutang (DSO)",
+      "status": "aman",
+      "nilai": "24 hari → 24 hari (-0 hari)",
+      "ambang": "aman bila naik < 10 hari"
+    },
+    {
+      "judul": "Hari persediaan (DIO)",
+      "status": "aman",
+      "nilai": "56 hari → 46 hari (-10 hari)",
+      "ambang": "aman bila naik < 10 hari"
+    },
+    {
+      "judul": "Siklus konversi kas",
+      "status": "aman",
+      "nilai": "51 hari → 50 hari (-1 hari)",
+      "ambang": "aman bila naik < 15 hari"
+    },
+    {
+      "judul": "DER (liabilitas ÷ ekuitas)",
+      "status": "aman",
+      "nilai": "0,12x",
+      "ambang": "aman ≤ 1,00x; kritis > 2,00x"
+    },
+    {
+      "judul": "Utang bank bersih ÷ EBITDA",
+      "status": "aman",
+      "nilai": "-1,01x",
+      "ambang": "aman ≤ 2,50x; kritis > 3,50x"
+    },
+    {
+      "judul": "Skor Altman Z'' (indikatif)",
+      "status": "aman",
+      "nilai": "16,69",
+      "ambang": "aman > 2,60; zona abu-abu 1,10-2,60; kritis < 1,10"
+    },
+    {
+      "judul": "Pertumbuhan pendapatan",
+      "status": "aman",
+      "nilai": "33,5%",
+      "ambang": "aman ≥ 0%; kritis < -5%"
+    }
+  ]
+}
